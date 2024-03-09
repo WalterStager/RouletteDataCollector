@@ -1,0 +1,12 @@
+{
+  "Author": "Walter Stager",
+  "Name": "Roulette Data Collector",
+  "Punchline": "Collects data on duty roulettes (just mentor for now)",
+  "Description": "Collects data on duty roulettes (just mentor for now)",
+  "ApplicableVersion": "any",
+  "Tags": [
+    "data",
+    "mentor",
+    "roulette"
+  ]
+}

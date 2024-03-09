@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="Dalamud.Plugin.Bootstrap.targets" />
+  <PropertyGroup>
+    <Authors />
+    <Company />
+    <Version>0.1.0.0</Version>
+    <Description>Collects data on duty roulettes.</Description>
+    <Copyright />
+    <PackageProjectUrl>https://github.com/WalterStager/RouletteDataCollector/</PackageProjectUrl>
+    <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+  <ItemGroup>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Dalamud.DrunkenToad" Version="1.8.15" />
+    <PackageReference Include="Dapper" Version="2.1.35" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.118" />
+  </ItemGroup>
+</Project>

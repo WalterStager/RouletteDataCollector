@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "dependencies": {
+    "net7.0-windows7.0": {
+      "Dalamud.DrunkenToad": {
+        "type": "Direct",
+        "requested": "[1.8.15, )",
+        "resolved": "1.8.15",
+        "contentHash": "biuHkQR0qmIMWEsa14CcWtUH4f6G7sOTQMDZZKws2MhzTYl/3sw2lDS3z6bBOPd17I1UPtmkFBBn0QbQEpO4PA==",
+        "dependencies": {
+          "Dalamud.Loc": "1.1.2",
+          "Microsoft.Extensions.DependencyInjection": "7.0.0"
+        }
+      },
+      "DalamudPackager": {
+        "type": "Direct",
+        "requested": "[2.1.12, )",
+        "resolved": "2.1.12",
+        "contentHash": "Sc0PVxvgg4NQjcI8n10/VfUQBAS4O+Fw2pZrAqBdRMbthYGeogzu5+xmIGCGmsEZ/ukMOBuAqiNiB5qA3MRalg=="
+      },
+      "Dapper": {
+        "type": "Direct",
+        "requested": "[2.1.35, )",
+        "resolved": "2.1.35",
+        "contentHash": "YKRwjVfrG7GYOovlGyQoMvr1/IJdn+7QzNXJxyMh0YfFF5yvDmTYaJOVYWsckreNjGsGSEtrMTpnzxTUq/tZQw=="
+      },
+      "System.Data.SQLite.Core": {
+        "type": "Direct",
+        "requested": "[1.0.118, )",
+        "resolved": "1.0.118",
+        "contentHash": "2V1PsfBeqWlZxF/VtB8lQKPfDBayCU8zD5Xc3Mq7cILOa2ZqpPDSwMP0fTfk1gtGSStSk//DxKiGy6zwCQs7Uw==",
+        "dependencies": {
+          "Stub.System.Data.SQLite.Core.NetStandard": "[1.0.118]"
+        }
+      },
+      "Dalamud.Loc": {
+        "type": "Transitive",
+        "resolved": "1.1.2",
+        "contentHash": "Sy7ooP1+mGtoCCPltgUNATz3UbnRFihVcDfg9wB2rdsfY5FDfCW/k3jpLZiJZc3xXHyttzwttJeVC3tE3JsEGw=="
+      },
+      "Microsoft.Extensions.DependencyInjection": {
+        "type": "Transitive",
+        "resolved": "7.0.0",
+        "contentHash": "elNeOmkeX3eDVG6pYVeV82p29hr+UKDaBhrZyWvWLw/EVZSYEkZlQdkp0V39k/Xehs2Qa0mvoCvkVj3eQxNQ1Q==",
+        "dependencies": {
+          "Microsoft.Extensions.DependencyInjection.Abstractions": "7.0.0"
+        }
+      },
+      "Microsoft.Extensions.DependencyInjection.Abstractions": {
+        "type": "Transitive",
+        "resolved": "7.0.0",
+        "contentHash": "h3j/QfmFN4S0w4C2A6X7arXij/M/OVw3uQHSOFxnND4DyAzO1F9eMX7Eti7lU/OkSthEE0WzRsfT/Dmx86jzCw=="
+      },
+      "Stub.System.Data.SQLite.Core.NetStandard": {
+        "type": "Transitive",
+        "resolved": "1.0.118",
+        "contentHash": "4TS8IZvDj0ud6utxfXI6zv9Ditk4U9Kt9KqLyAIQGcU3GXp5oGBHgGZifq+APcqRCayuN/MSE8t9ZZmygtU28A=="
+      }
+    }
+  }
+}
