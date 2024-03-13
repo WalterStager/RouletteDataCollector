@@ -20,13 +20,15 @@ public class RDCConfigWindow : Window, IDisposable
     }
 
 
-    public void Dispose() { }
+    public void Dispose()
+    {
+        
+    }
 
     public override void Draw()
     {
         // can't ref a property, so use a local copy
         var configValue = this.Configuration.EnableSaveData;
-
         
         if (ImGui.Checkbox("Enable saving data", ref configValue))
         {
@@ -40,6 +42,11 @@ public class RDCConfigWindow : Window, IDisposable
         if (ImGui.Button("Save config"))
         {
             this.Configuration.Save();
+        }
+
+        if (ImGui.Button("Debug Button 1"))
+        {
+            this.Configuration.DebugButtonAction();
         }
     }
 }

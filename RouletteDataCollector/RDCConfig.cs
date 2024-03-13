@@ -2,6 +2,8 @@
 using Dalamud.Plugin;
 using System;
 
+using Dalamud.Plugin.Services;
+
 namespace RouletteDataCollector
 {
     [Serializable]
@@ -14,15 +16,23 @@ namespace RouletteDataCollector
         // the below exist just to make saving less cumbersome
         [NonSerialized]
         private DalamudPluginInterface? PluginInterface;
+        private IPluginLog? log;
 
-        public void Initialize(DalamudPluginInterface pluginInterface)
+        public void Initialize(DalamudPluginInterface pluginInterface, IPluginLog log)
         {
             this.PluginInterface = pluginInterface;
+            this.log = log;
         }
 
         public void Save()
         {
             this.PluginInterface!.SavePluginConfig(this);
+        }
+
+
+        public void DebugButtonAction()
+        {
+
         }
     }
 }
