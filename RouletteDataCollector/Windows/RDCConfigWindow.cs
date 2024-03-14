@@ -7,7 +7,7 @@ namespace RouletteDataCollector.Windows;
 
 public class RDCConfigWindow : Window, IDisposable
 {
-    private RDCConfig Configuration;
+    private RDCConfig configuration;
 
     public RDCConfigWindow(RouletteDataCollector plugin) : base(
         "Roulette Data Collector Config",
@@ -16,7 +16,7 @@ public class RDCConfigWindow : Window, IDisposable
         this.Size = new Vector2(232, 75);
         this.SizeCondition = ImGuiCond.FirstUseEver;
 
-        this.Configuration = plugin.Configuration;
+        this.configuration = plugin.configuration;
     }
 
 
@@ -28,11 +28,11 @@ public class RDCConfigWindow : Window, IDisposable
     public override void Draw()
     {
         // can't ref a property, so use a local copy
-        var configValue = this.Configuration.EnableSaveData;
+        var configValue = this.configuration.enableSaveData;
         
         if (ImGui.Checkbox("Enable saving data", ref configValue))
         {
-            this.Configuration.EnableSaveData = configValue;
+            this.configuration.enableSaveData = configValue;
         }
         if (ImGui.IsItemHovered())
         {
@@ -41,12 +41,12 @@ public class RDCConfigWindow : Window, IDisposable
 
         if (ImGui.Button("Save config"))
         {
-            this.Configuration.Save();
+            this.configuration.Save();
         }
 
         if (ImGui.Button("Debug Button 1"))
         {
-            this.Configuration.DebugButtonAction();
+            this.configuration.DebugButtonAction();
         }
     }
 }

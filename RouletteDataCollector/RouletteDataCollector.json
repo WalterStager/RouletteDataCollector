@@ -1,8 +1,8 @@
 {
   "Author": "Walter Stager",
   "Name": "Roulette Data Collector",
-  "Punchline": "Collects data on duty roulettes (just mentor for now)",
-  "Description": "Collects data on duty roulettes (just mentor for now)",
+  "Punchline": "Collects data on duty roulettes",
+  "Description": "Collects data on duty roulettes.\nData goes to a local database.",
   "ApplicableVersion": "any",
   "Tags": [
     "data",

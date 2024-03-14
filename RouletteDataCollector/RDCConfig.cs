@@ -11,22 +11,22 @@ namespace RouletteDataCollector
     {
         public int Version { get; set; } = 0;
 
-        public bool EnableSaveData { get; set; } = true;
+        public bool enableSaveData { get; set; } = true;
 
         // the below exist just to make saving less cumbersome
         [NonSerialized]
-        private DalamudPluginInterface? PluginInterface;
+        private DalamudPluginInterface? pluginInterface;
         private IPluginLog? log;
 
         public void Initialize(DalamudPluginInterface pluginInterface, IPluginLog log)
         {
-            this.PluginInterface = pluginInterface;
+            this.pluginInterface = pluginInterface;
             this.log = log;
         }
 
         public void Save()
         {
-            this.PluginInterface!.SavePluginConfig(this);
+            this.pluginInterface!.SavePluginConfig(this);
         }
 
 

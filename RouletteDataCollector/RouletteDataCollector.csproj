@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Authors />
     <Company />
-    <Version>0.1.1.1</Version>
+    <Version>0.1.2.1</Version>
     <Description>Collects data on duty roulettes.</Description>
     <Copyright />
     <PackageProjectUrl>https://github.com/WalterStager/RouletteDataCollector/</PackageProjectUrl>
