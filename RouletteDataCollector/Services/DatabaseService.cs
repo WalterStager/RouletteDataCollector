@@ -46,6 +46,10 @@ namespace RouletteDataCollector.Services
             {
                 plugin.log.Info($"Roulettes INSERT {data}");
                 int rowsAffected = this.sqconn.Execute("INSERT INTO Roulettes (id, created, updated, queue_start, roulette_type) VALUES (@Guid, @Created, @Updated, @QueueStart, @RouletteType)", data);
+                if (rowsAffected != 1)
+                {
+                    this.plugin.log.Warning($"Roulettes INSERT affected {rowsAffected} rows instead of 1");
+                }
             }
         }
 
@@ -55,10 +59,14 @@ namespace RouletteDataCollector.Services
             if (plugin.configuration.enableSaveData)
             {
                 plugin.log.Info($"Start location UPDATE {guid} updated = '{timestamp}', queue_end = '{timestamp}', duty_start = '{timestamp}', territory_id = {territoryId}, content_id = {contentId}");
-                this.sqconn.Execute($@"
+                int rowsAffected = this.sqconn.Execute($@"
                     UPDATE Roulettes
                     SET updated = '{timestamp}', queue_end = '{timestamp}', duty_start = '{timestamp}', territory_id = {territoryId}, content_id = {contentId}
                     WHERE id = '{guid}'");
+                if (rowsAffected != 1)
+                {
+                    this.plugin.log.Warning($"Start location UPDATE affected {rowsAffected} rows instead of 1");
+                }
             }
         }
 
@@ -68,7 +76,11 @@ namespace RouletteDataCollector.Services
             if (plugin.configuration.enableSaveData)
             {
                 plugin.log.Info($"End location UPDATE {guid} updated = '{timestamp}', duty_end = '{timestamp}'");
-                this.sqconn.Execute($@"UPDATE Roulettes SET updated = '{timestamp}', duty_end = '{timestamp}' WHERE id = '{guid}'");
+                int rowsAffected = this.sqconn.Execute($@"UPDATE Roulettes SET updated = '{timestamp}', duty_end = '{timestamp}' WHERE id = '{guid}'");
+                if (rowsAffected != 1)
+                {
+                    this.plugin.log.Warning($"End location UPDATE affected {rowsAffected} rows instead of 1");
+                }
             }
         }
 
