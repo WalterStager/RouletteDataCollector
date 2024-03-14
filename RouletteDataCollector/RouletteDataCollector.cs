@@ -36,6 +36,8 @@ namespace RouletteDataCollector
         private ICommandManager commandManager { get; init; }
         private IAddonEventManager addonEventManager { get; init; }
         private IAddonLifecycle addonLifecycle { get; init; }
+        private IDutyState dutyState { get; init; }
+
         private RDCConfigWindow configWindow { get; init; }
 
         public RouletteDataCollector(
@@ -43,7 +45,8 @@ namespace RouletteDataCollector
             [RequiredVersion("1.0")] ICommandManager commandManager,
             [RequiredVersion("1.0")] IPluginLog log,
             [RequiredVersion("1.0")] IAddonEventManager addonEventManager,
-            [RequiredVersion("1.0")] IAddonLifecycle addonLifecycle)
+            [RequiredVersion("1.0")] IAddonLifecycle addonLifecycle,
+            [RequiredVersion("1.0")] IDutyState dutyState)
         {
             log.Debug("Start of RouletteDataCollector constructor");
             this.log = log;
@@ -51,6 +54,7 @@ namespace RouletteDataCollector
             this.commandManager = commandManager;
             this.addonEventManager = addonEventManager;
             this.addonLifecycle = addonLifecycle;
+            this.dutyState = dutyState;
 
             this.configuration = this.pluginInterface.GetPluginConfig() as RDCConfig ?? new RDCConfig();
             this.configuration.Initialize(this.pluginInterface, this.log);
@@ -66,6 +70,8 @@ namespace RouletteDataCollector
             DalamudContext.Initialize(pluginInterface);
             DalamudContext.PlayerLocationManager.LocationStarted += this.OnStartLocation;
             DalamudContext.PlayerLocationManager.LocationEnded += this.OnEndLocation;
+            this.dutyState.DutyWiped += this.OnDutyWipe;
+            this.dutyState.DutyCompleted += this.OnDutyCompleted;
 
             this.toDoListService = new ToDoListService(this, this.addonLifecycle, this.RouletteTypeUpdate);
             this.databaseService = new DatabaseService(this, Path.Combine(this.pluginInterface.GetPluginConfigDirectory(), "database.db"));
@@ -104,6 +110,9 @@ namespace RouletteDataCollector
             DalamudContext.PlayerLocationManager.LocationStarted -= this.OnEndLocation;
             DalamudContext.PlayerLocationManager.Dispose();
             DalamudContext.Dispose();
+
+            this.dutyState.DutyWiped -= this.OnDutyWipe;
+            this.dutyState.DutyCompleted -= this.OnDutyCompleted;
 
             this.toDoListService.Stop();
             this.databaseService.Stop();
@@ -157,5 +166,20 @@ namespace RouletteDataCollector
             }
         }
 
+        private void OnDutyWipe(object? sender, ushort eventValue) {
+            if (this.currentGUID == null) {
+                this.log.Error($"Didn't detect queue into content correctly on wipe");
+                return;
+            }
+            this.databaseService.DutyWipeUpdate(this.currentGUID);
+        }
+
+        private void OnDutyCompleted(object? sender, ushort eventValue) {
+            if (this.currentGUID == null) {
+                this.log.Error($"Didn't detect queue into content correctly on completed");
+                return;
+            }
+            this.databaseService.DutySuccessfulUpdate(this.currentGUID);
+        }
     }
 }

@@ -84,6 +84,34 @@ namespace RouletteDataCollector.Services
             }
         }
 
+        public void DutyWipeUpdate(string guid)
+        {
+            string timestamp = GetTimestamp();
+            if (plugin.configuration.enableSaveData)
+            {
+                plugin.log.Info($"Duty wipe UPDATE {guid} updated = '{timestamp}', wipes += 1");
+                int rowsAffected = this.sqconn.Execute($@"UPDATE Roulettes SET updated = '{timestamp}', wipes = (IFNULL(wipes, 0) + 1) WHERE id = '{guid}'");
+                if (rowsAffected != 1)
+                {
+                    this.plugin.log.Warning($"Duty wipe UPDATE affected {rowsAffected} rows instead of 1");
+                }
+            }
+        }
+
+        public void DutySuccessfulUpdate(string guid)
+        {
+            string timestamp = GetTimestamp();
+            if (plugin.configuration.enableSaveData)
+            {
+                plugin.log.Info($"Duty success UPDATE {guid} updated = '{timestamp}', conclusion = 'clear'");
+                int rowsAffected = this.sqconn.Execute($@"UPDATE Roulettes SET updated = '{timestamp}', conclusion = 'clear' WHERE id = '{guid}'");
+                if (rowsAffected != 1)
+                {
+                    this.plugin.log.Warning($"Duty success UPDATE {rowsAffected} rows instead of 1");
+                }
+            }
+        }
+
         private void InitializeDatabase()
         {
             const string create_tables = @"
