@@ -45,7 +45,7 @@ namespace RouletteDataCollector.Services
             if (plugin.configuration.enableSaveData)
             {
                 plugin.log.Info($"Roulettes INSERT {data}");
-                this.sqconn.Execute("Roulettes INSERT (id, created, updated, queue_start, roulette_type) VALUES (@Guid, @Created, @Updated, @QueueStart, @RouletteType)", data);
+                int rowsAffected = this.sqconn.Execute("INSERT INTO Roulettes (id, created, updated, queue_start, roulette_type) VALUES (@Guid, @Created, @Updated, @QueueStart, @RouletteType)", data);
             }
         }
 
