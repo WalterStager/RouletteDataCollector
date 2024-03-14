@@ -1,20 +1,32 @@
-﻿using System;
+using System;
 using System.IO;
 
 using Dalamud.Game.Command;
-using Dalamud.Game.Addon.Events;
-using Dalamud.IoC;
+// using Dalamud.Game.Addon.Events;
+// using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin.Services;
 
-using FFXIVClientStructs.FFXIV.Component.GUI;
+// using FFXIVClientStructs.FFXIV.Component.GUI;
+// using FFXIVClientStructs.FFXIV.Client.Game.Event;
 
 using Dalamud.DrunkenToad.Core;
 using Dalamud.DrunkenToad.Core.Models;
 
 using RouletteDataCollector.Windows;
 using RouletteDataCollector.Services;
+
+using Dalamud.Game.Addon.Lifecycle;
+using Dalamud.Game.Addon.Lifecycle.AddonArgTypes; 
+
+// using System.Runtime.InteropServices;
+
+using Dalamud.Game.ClientState.Resolvers;
+using Dalamud.Game.ClientState.Party;
+using Lumina.Excel.GeneratedSheets;
+using Dalamud;
+// using FFXIVClientStructs.FFXIV.Client.UI.Info;
 
 namespace RouletteDataCollector
 {
@@ -37,16 +49,18 @@ namespace RouletteDataCollector
         private IAddonEventManager addonEventManager { get; init; }
         private IAddonLifecycle addonLifecycle { get; init; }
         private IDutyState dutyState { get; init; }
+        private IPartyList partyList  { get; init; }
 
         private RDCConfigWindow configWindow { get; init; }
 
         public RouletteDataCollector(
-            [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
-            [RequiredVersion("1.0")] ICommandManager commandManager,
-            [RequiredVersion("1.0")] IPluginLog log,
-            [RequiredVersion("1.0")] IAddonEventManager addonEventManager,
-            [RequiredVersion("1.0")] IAddonLifecycle addonLifecycle,
-            [RequiredVersion("1.0")] IDutyState dutyState)
+            DalamudPluginInterface pluginInterface,
+            ICommandManager commandManager,
+            IPluginLog log,
+            IAddonEventManager addonEventManager,
+            IAddonLifecycle addonLifecycle,
+            IDutyState dutyState,
+            IPartyList partyList)
         {
             log.Debug("Start of RouletteDataCollector constructor");
             this.log = log;
@@ -55,6 +69,7 @@ namespace RouletteDataCollector
             this.addonEventManager = addonEventManager;
             this.addonLifecycle = addonLifecycle;
             this.dutyState = dutyState;
+            this.partyList = partyList;
 
             this.configuration = this.pluginInterface.GetPluginConfig() as RDCConfig ?? new RDCConfig();
             this.configuration.Initialize(this.pluginInterface, this.log);
@@ -86,6 +101,7 @@ namespace RouletteDataCollector
                 this.inContent = startLocation.InContent();
                 this.log.Info($"Starting plugin while in content {this.inContent}");
             }
+            this.addonLifecycle.RegisterListener(AddonEvent.PostRequestedUpdate, "_PartyList", TestListener);
         }
 
         private void RouletteTypeUpdate(string rouletteType)
@@ -94,14 +110,23 @@ namespace RouletteDataCollector
             this.databaseService.RouletteInsert(this.currentGUID, rouletteType);
         }
 
-        private unsafe void TestAddonHandler(AddonEventType atkEventType, nint atkUnitBase, nint atkResNode)
+        private unsafe void TestListener(AddonEvent type, AddonArgs args)
         {
-            AtkUnitBase* baseUnit = (AtkUnitBase*)atkUnitBase;
-            string baseName = "";
-            if (baseUnit->Name != null) {
-                baseName = System.Text.Encoding.UTF8.GetString(baseUnit->Name, 32);
+            this.log.Info($"PartyMember count {this.partyList.Length}");
+            for (int i = 0; i < this.partyList.Length; i++)
+            {
+                PartyMember? partyMember = this.partyList[i];
+                if (partyMember != null)
+                {
+                    ExcelResolver<ClassJob> job = partyMember.ClassJob;
+                    ExcelResolver<World> world = partyMember.World;
+                    this.log.Info($"{i} {partyMember.Name} {partyMember.Level} {job.GetWithLanguage(ClientLanguage.English)} {world.GetWithLanguage(ClientLanguage.English)}");
+                }
+                else
+                {
+                    this.log.Info($"{i} null");
+                }
             }
-            this.log.Verbose($"TestAddonHandler enter {atkEventType}, {atkUnitBase:X}, {atkResNode:X}, name {baseName}");
         }
 
         public void Dispose()
