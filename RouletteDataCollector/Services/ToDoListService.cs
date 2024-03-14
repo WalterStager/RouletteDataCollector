@@ -94,39 +94,50 @@ namespace RouletteDataCollector.Services
                 return;
             }
 
+            string? queueTimeString = null;
             // Normal duties use 20004 and Roulettes use 20005
             AtkResNode* queueTimeNode = SearchLinkedListForID(toDoListRootNode, 20004);
             if (queueTimeNode == null)
             {
-                plugin.log.Verbose("null queueTimeNode AtkResNode*");
-                return;
+                plugin.log.Verbose("null 20004 queueTimeNode AtkResNode*");
             }
-            AtkTextNode* queueTimeTextNode = (AtkTextNode*)SearchNodeListForID(queueTimeNode, 6);
-            if (queueTimeTextNode == null)
+            else
             {
-                plugin.log.Verbose("null queueTimeTextNode AtkTextNode*");
-                return;
+                AtkTextNode* queueTimeTextNode = (AtkTextNode*)SearchNodeListForID(queueTimeNode, 6);
+                if (queueTimeTextNode == null)
+                {
+                    plugin.log.Verbose("null 20004 queueTimeTextNode AtkTextNode*");
+                }
+                else
+                {
+                    queueTimeString = queueTimeTextNode->NodeText.ToString();
+                }
             }
-
-            // Normal duties use 20004 and Roulettes use 20005
-            if (!queueTimeTextNode->NodeText.ToString().Contains("Time Elapsed"))
+            
+            // skip if str contains "Time Elapsed"
+            if (!queueTimeString?.Contains("Time Elapsed") ?? true)
             {
                 queueTimeNode = SearchLinkedListForID(toDoListRootNode, 20005);
                 if (queueTimeNode == null)
                 {
-                    plugin.log.Verbose("null queueTimeNode AtkResNode*");
-                    return;
+                    plugin.log.Verbose("null 20005 queueTimeNode AtkResNode*");
                 }
-                queueTimeTextNode = (AtkTextNode*)SearchLinkedListForID(queueTimeNode, 6);
-                if (queueTimeTextNode == null)
+                else
                 {
-                    plugin.log.Verbose("null queueTimeTextNode AtkTextNode*");
-                    return;
+                    AtkTextNode* queueTimeTextNode = (AtkTextNode*)SearchNodeListForID(queueTimeNode, 6);
+                    if (queueTimeTextNode == null)
+                    {
+                        plugin.log.Verbose("null 20005 queueTimeTextNode AtkTextNode*");
+                    }
+                    else
+                    {
+                        queueTimeString = queueTimeTextNode->NodeText.ToString();
+                    }
                 }
             }
             
-            
-            if (queueTimeTextNode->NodeText.ToString().Contains("Time Elapsed: 0:00/Average Wait Time: More than 30m")) {
+            // skip if str null or doesn't contain "Time Elapsed..."
+            if (queueTimeString?.Contains("Time Elapsed: 0:00/Average Wait Time: More than 30m") ?? false) {
                 string rouletteType = dutyInfoTextNode->NodeText.ToString();
                 plugin.log.Verbose($"rouletteType '{rouletteType}'");
                 this.toDoListRouletteInfoCallback(rouletteType);
