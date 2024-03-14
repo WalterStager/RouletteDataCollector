@@ -34,7 +34,7 @@ namespace RouletteDataCollector.Services
 
         public static string GetTimestamp()
         {
-            return DateTime.UtcNow.ToString("yyyy-MM-dd hh:mm:ss.ssss");
+            return DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.ff");
         }
 
         public void RouletteInsert(string guid, string rouletteType)
