@@ -1,8 +1,11 @@
 using System;
+using System.Reflection;
 
 using Dapper;
 
 using System.Data.SQLite;
+using RouletteDataCollector.Structs;
+using Dalamud.DrunkenToad.Extensions;
 
 namespace RouletteDataCollector.Services
 {
@@ -112,9 +115,40 @@ namespace RouletteDataCollector.Services
             }
         }
 
+        public void PlayerInsert(string guid, RDCPartyMember player)
+        {            
+            if (plugin.configuration.enableSaveData)
+            {
+                string timestamp = GetTimestamp();
+                var data = new {Guid = guid, Created = timestamp, Updated = timestamp, Name = player.name, Homeworld = player.homeworldId, Collector = player.collector};
+                plugin.log.Info($"Player INSERT {data}");
+                int rowsAffected = this.sqconn.Execute("INSERT INTO Players (id, created, updated, name, homeworld, collector) VALUES (@Guid, @Created, @Updated, @Name, @Homeworld, @Collector)", data);
+                if (rowsAffected != 1)
+                {
+                    this.plugin.log.Warning($"Player INSERT affected {rowsAffected} rows instead of 1");
+                }
+            }
+        }
+
+        public void GearsetInsert(string guid, string playerGuid, string rouletteGuid, uint job, uint level)
+        {
+            if (plugin.configuration.enableSaveData)
+            {
+                string timestamp = GetTimestamp();
+                var data = new {Guid = guid, Created = timestamp, Updated = timestamp, Player = playerGuid, Roulette = rouletteGuid, Job = job, Level = level};
+                plugin.log.Info($"Gearset INSERT {data}");
+                int rowsAffected = this.sqconn.Execute("INSERT INTO Gearsets (id, created, updated, player, roulette, job, level) VALUES (@Guid, @Created, @Updated, @Player, @Roulette, @Job, @Level)", data);
+                if (rowsAffected != 1)
+                {
+                    this.plugin.log.Warning($"Gearset INSERT affected {rowsAffected} rows instead of 1");
+                }
+            }   
+        }
+
         private void InitializeDatabase()
         {
-            const string create_tables = @"
+            string create_tables = $@"
+                PRAGMA user_version = {Assembly.GetCallingAssembly().VersionNumber()};
                 CREATE TABLE IF NOT EXISTS Roulettes (
                     id                  TEXT NOT NULL PRIMARY KEY,
                     created             NUMERIC NOT NULL,
@@ -135,9 +169,9 @@ namespace RouletteDataCollector.Services
                     created             NUMERIC NOT NULL,
                     updated             NUMERIC NOT NULL,
                     name                TEXT,
-                    homeworld           TEXT,
+                    homeworld           INT,
                     lodestone_id        INT,
-                    collecter           INT
+                    collector           INT
                 );
                 CREATE TABLE IF NOT EXISTS Gearsets (
                     id                  TEXT NOT NULL PRIMARY KEY,
@@ -146,33 +180,33 @@ namespace RouletteDataCollector.Services
                     player              TEXT NOT NULL REFERENCES Players (id),
                     roulette            TEXT NOT NULL REFERENCES Roulettes (id),
                     item_level          INT,
-                    job                 TEXT,
-                    race                TEXT,
+                    job                 INT,
+                    race                INT,
                     level               INT,
-                    weapon              TEXT,
-                    offhand             TEXT,
-                    head                TEXT,
-                    body                TEXT,
-                    hands               TEXT,
-                    legs                TEXT,
-                    feet                TEXT,
-                    ears                TEXT,
-                    neck                TEXT,
-                    wrists              TEXT,
-                    ring1               TEXT,
-                    ring2               TEXT,
-                    materia_weapon      TEXT,
-                    materia_offhand     TEXT,
-                    materia_head        TEXT,
-                    materia_body        TEXT,
-                    materia_hands       TEXT,
-                    materia_legs        TEXT,
-                    materia_feet        TEXT,
-                    materia_ears        TEXT,
-                    materia_neck        TEXT,
-                    materia_wrists      TEXT,
-                    materia_ring1       TEXT,
-                    materia_ring2       TEXT
+                    weapon              INT,
+                    offhand             INT,
+                    head                INT,
+                    body                INT,
+                    hands               INT,
+                    legs                INT,
+                    feet                INT,
+                    ears                INT,
+                    neck                INT,
+                    wrists              INT,
+                    ring1               INT,
+                    ring2               INT,
+                    materia_weapon      INT,
+                    materia_offhand     INT,
+                    materia_head        INT,
+                    materia_body        INT,
+                    materia_hands       INT,
+                    materia_legs        INT,
+                    materia_feet        INT,
+                    materia_ears        INT,
+                    materia_neck        INT,
+                    materia_wrists      INT,
+                    materia_ring1       INT,
+                    materia_ring2       INT
                 );";
 
             this.sqconn.Execute(create_tables);
