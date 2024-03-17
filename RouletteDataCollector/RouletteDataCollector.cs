@@ -18,6 +18,8 @@ using FFXIVClientStructs.FFXIV.Client.Game;
 using System.Linq;
 using AutoMapper;
 using RouletteDataCollector.Mappings;
+using Dalamud.Game.ClientState.Objects;
+using Dalamud.Game.ClientState.Objects.SubKinds;
 
 namespace RouletteDataCollector
 {
@@ -28,11 +30,9 @@ namespace RouletteDataCollector
         private const string BrowserCommand = "/prdcbrowse";
     
         // these are all cleared when exiting instance
-        internal HashSet<string> inspectedPlayers = new HashSet<string>();
         internal Dictionary<string, string> playerToGearset = new Dictionary<string, string>();
         internal string? currentGUID = null;
         internal bool inContent = false;
-        private IMapper mapper;
 
         // saved between instances
         internal HashSet<string> seenPlayers = new HashSet<string>();
@@ -53,6 +53,9 @@ namespace RouletteDataCollector
         internal IPartyList partyList  { get; init; }
         internal IClientState clientState { get; init; }
         internal IGameGui gameGui { get; init; }
+        internal RDCMapper rdcmapper { get; init; }
+        internal static ITargetManager? targetManager { get; private set; }
+        internal static IObjectTable? objectTable { get; private set; }
 
         private RDCConfigWindow configWindow { get; init; }
         private RDCBrowserWindow browseWindow;
@@ -66,7 +69,9 @@ namespace RouletteDataCollector
             IDutyState dutyState,
             IPartyList partyList,
             IClientState clientState,
-            IGameGui gameGui)
+            IGameGui gameGui,
+            ITargetManager targetManager,
+            IObjectTable objectTable)
         {
             log.Debug("Start of RouletteDataCollector constructor");
             this.log = log;
@@ -78,6 +83,9 @@ namespace RouletteDataCollector
             this.partyList = partyList;
             this.clientState = clientState;
             this.gameGui = gameGui;
+            RouletteDataCollector.targetManager = targetManager;
+            RouletteDataCollector.objectTable = objectTable;
+            rdcmapper = new RDCMapper(this);
 
             this.configuration = this.pluginInterface.GetPluginConfig() as RDCConfig ?? new RDCConfig();
             this.configuration.Initialize(this, this.pluginInterface);
@@ -122,12 +130,6 @@ namespace RouletteDataCollector
                 this.inContent = startLocation.InContent();
                 this.log.Info($"Starting plugin while in content {this.inContent}");
             }
-
-            MapperConfiguration config = new MapperConfiguration(cfg => {
-                cfg.AddProfile<ListsToDBGearset>();
-                cfg.AddProfile<ListToDBMateriaset>(); });
-
-            this.mapper = config.CreateMapper();
         }
 
         public void Dispose()
@@ -178,10 +180,8 @@ namespace RouletteDataCollector
             this.databaseService.RouletteInsert(this.currentGUID, rouletteType);
         }
 
-        private unsafe bool OnPartyMemberExamine(PartyMember member, InventoryContainer* invContainer)
+        public unsafe DBGearset getInvContainerIds(InventoryContainer* invContainer)
         {
-            this.log.Verbose($"Inspecting {member.Name}");
-            
             List<uint> itemIds = Enumerable.Repeat(0U, 14).ToList();
             List<string?> materiaGuids = Enumerable.Repeat<string?>(null, 14).ToList();
             
@@ -199,23 +199,28 @@ namespace RouletteDataCollector
                 }
                 else
                 {
-                    this.log.Verbose($"{member.Name} item {i}=null");
+                    this.log.Verbose($"item {i}=null");
                 }
 
                 // if there is at least some materia
                 if (materiaIds[0].Item1 != 0)
                 {
-                    
-                    DBMateriaset matSet = mapper.Map<DBMateriaset>(materiaIds);
+                    DBMateriaset matSet = rdcmapper.mapper.Map<DBMateriaset>(materiaIds);
                     string matSetGuid = Guid.NewGuid().ToString();
                     matSet.id = matSetGuid;
                     this.databaseService.MateriasetInsert(matSetGuid, matSet);
                     materiaGuids[i] = matSetGuid;
                 }
             }
+            
+            return rdcmapper.mapper.Map<DBGearset>((itemIds, materiaGuids));
+        }
 
-            DBGearset gear = mapper.Map<DBGearset>((itemIds, materiaGuids));
-            this.databaseService.GearsetGearUpdate(this.playerToGearset[getPartyMemberUniqueString(member)], gear);
+        private unsafe bool OnPartyMemberExamine(string playerId, InventoryContainer* invContainer)
+        {
+            this.log.Info($"Inspecting {playerId}");
+            DBGearset gear = getInvContainerIds(invContainer);
+            this.databaseService.GearsetGearUpdate(this.playerToGearset[playerId], gear);
             return true;
         }
 
@@ -227,7 +232,7 @@ namespace RouletteDataCollector
                 return;
             }
             // should i just use this unique str as the key instead of guid? IDK
-            string playerUniqueStr = getPartyMemberUniqueString(newMember);
+            string playerUniqueStr = getPlayerUid(newMember);
 
             if (!this.seenPlayers.Contains(playerUniqueStr))
             {
@@ -240,11 +245,10 @@ namespace RouletteDataCollector
                 this.databaseService.PlayerInsert(playerUniqueStr, player);
             }
 
-            this.configuration.remainingInspections = null; 
-
             // add gearset
             if (!this.playerToGearset.ContainsKey(playerUniqueStr))
             {
+                this.configuration.remainingInspections = null; 
                 string gearsetGUID = Guid.NewGuid().ToString();
                 this.playerToGearset.Add(playerUniqueStr, gearsetGUID);
                 this.databaseService.GearsetInsert(gearsetGUID, playerUniqueStr, this.currentGUID, newMember.ClassJob.Id, newMember.Level);
@@ -275,7 +279,7 @@ namespace RouletteDataCollector
                 this.inContent = false;
                 this.databaseService.EndLocationUpdate(this.currentGUID);
                 this.currentGUID = null;
-                this.inspectedPlayers.Clear();
+                this.partyMemberService.clearInspectedPlayers();
                 this.playerToGearset.Clear();
             }
         }
@@ -297,9 +301,14 @@ namespace RouletteDataCollector
         }
 
         // Name+WorldID is as unique an identifier for a player (in the short term) as we can get
-        public static string getPartyMemberUniqueString(PartyMember member)
+        public static string getPlayerUid(PartyMember player)
         {
-            return $"{member.Name}+{member.World.Id}";
+            return $"{player.Name}+{player.World.Id}";
+        }
+
+        public static string getPlayerUid(PlayerCharacter player)
+        {
+            return $"{player.Name}+{player.HomeWorld.Id}";
         }
     }
 }

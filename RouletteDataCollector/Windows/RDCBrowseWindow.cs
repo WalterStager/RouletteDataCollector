@@ -20,7 +20,6 @@ public class RDCBrowserWindow : Window, IDisposable
     private int dbPageIndex = 0;
 
     private IEnumerable<object>? dbTableData = null;
-    private IMapper mapper;
 
     public RDCBrowserWindow(RouletteDataCollector plugin) : base(
         $"Roulette Data Collector DB Browser",
@@ -32,14 +31,6 @@ public class RDCBrowserWindow : Window, IDisposable
 
         this.dbTableNames = Enum.GetNames(typeof(RDCDatabaseTable));
         this.dbTableValues = (int[]?)Enum.GetValues(typeof(RDCDatabaseTable));
-
-        MapperConfiguration config = new MapperConfiguration(cfg => {
-            cfg.AddProfile<DBGearsetToResolvedGearset>();
-            cfg.AddProfile<DBPlayerToResolvedPlayer>();
-            cfg.AddProfile<DBMateriasetToResolvedMateriaset>();
-            cfg.AddProfile<DBRouletteToResolvedRoulette>(); }); 
-
-        this.mapper = config.CreateMapper();
     }
 
 
@@ -64,16 +55,16 @@ public class RDCBrowserWindow : Window, IDisposable
             switch ((RDCDatabaseTable)this.comboIndex)
             {
                 case RDCDatabaseTable.Gearsets:
-                    this.dbTableData = this.plugin?.databaseService.QueryRecentlyUpdated<DBGearset>((RDCDatabaseTable)this.comboIndex, 10, (uint)(10 * dbPageIndex)).Select<DBGearset, ResolvedGearset>(element => mapper.Map<ResolvedGearset>(element)).Cast<object>();
+                    this.dbTableData = this.plugin?.databaseService.QueryRecentlyUpdated<DBGearset>((RDCDatabaseTable)this.comboIndex, 10, (uint)(10 * dbPageIndex)).Select<DBGearset, ResolvedGearset>(element => plugin.rdcmapper.mapper.Map<ResolvedGearset>(element)).Cast<object>();
                     break;
                 case RDCDatabaseTable.Roulettes:
-                    this.dbTableData = this.plugin?.databaseService.QueryRecentlyUpdated<DBRoulette>((RDCDatabaseTable)this.comboIndex, 10, (uint)(10 * dbPageIndex)).Select(element => mapper.Map<ResolvedRoulette>(element)).Cast<object>();
+                    this.dbTableData = this.plugin?.databaseService.QueryRecentlyUpdated<DBRoulette>((RDCDatabaseTable)this.comboIndex, 10, (uint)(10 * dbPageIndex)).Select(element => plugin.rdcmapper.mapper.Map<ResolvedRoulette>(element)).Cast<object>();
                     break;
                 case RDCDatabaseTable.Players:
-                    this.dbTableData = this.plugin?.databaseService.QueryRecentlyUpdated<DBPlayer>((RDCDatabaseTable)this.comboIndex, 10, (uint)(10 * dbPageIndex)).Select(element => mapper.Map<ResolvedPlayer>(element)).Cast<object>();
+                    this.dbTableData = this.plugin?.databaseService.QueryRecentlyUpdated<DBPlayer>((RDCDatabaseTable)this.comboIndex, 10, (uint)(10 * dbPageIndex)).Select(element => plugin.rdcmapper.mapper.Map<ResolvedPlayer>(element)).Cast<object>();
                     break;
                 case RDCDatabaseTable.Materiasets:
-                    this.dbTableData = this.plugin?.databaseService.QueryRecentlyUpdated<DBMateriaset>((RDCDatabaseTable)this.comboIndex, 10, (uint)(10 * dbPageIndex)).Select(element => mapper.Map<ResolvedMateriaset>(element)).Cast<object>();
+                    this.dbTableData = this.plugin?.databaseService.QueryRecentlyUpdated<DBMateriaset>((RDCDatabaseTable)this.comboIndex, 10, (uint)(10 * dbPageIndex)).Select(element => plugin.rdcmapper.mapper.Map<ResolvedMateriaset>(element)).Cast<object>();
                     break;
                 default: break;
             }

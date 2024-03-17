@@ -40,6 +40,17 @@ public class DBGearset
     public string? materia_wrists { get; set; }
     public string? materia_ring1 { get; set; }
     public string? materia_ring2 { get; set; }
+
+    public override string ToString()
+    {
+        return @$"
+        DBMateriaset {id}
+            player {player}
+            weapon {weapon}
+            head   {head}
+            body   {body}
+            ss     {soulstone}";
+    }
 }
 
 public class ResolvedGearset
@@ -79,6 +90,17 @@ public class ResolvedGearset
     public string? materia_wrists;
     public string? materia_ring1;
     public string? materia_ring2;
+
+    public override string ToString()
+    {
+        return @$"
+        DBMateriaset {id}
+            player {player}
+            weapon {weapon}
+            head   {head}
+            body   {body}
+            ss     {soulstone}";
+    }
 }
 
 

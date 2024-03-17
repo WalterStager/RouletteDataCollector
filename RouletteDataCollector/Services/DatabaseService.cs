@@ -167,7 +167,7 @@ public sealed class DatabaseService
         if (plugin.configuration.enableSaveData)
         {
             gear.updated = GetTimestamp();
-            plugin.log.Info($"Gearsets gear UPDATE {gear}");
+            plugin.log.Info($"Gearsets gear UPDATE {guid} {gear}");
             int rowsAffected = this.sqconn.Execute($@"
                 UPDATE Gearsets SET
                     updated = @updated,

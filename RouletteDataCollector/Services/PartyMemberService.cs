@@ -9,20 +9,31 @@ using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using System.Collections;
 using System.Collections.Generic;
+using System.Timers;
+using System;
+using System.Threading.Tasks;
+using Dalamud.Game.ClientState.Objects.Types;
+using Dalamud.Game.ClientState.Objects.Enums;
+using Dalamud.Game.ClientState.Objects.SubKinds;
+using Dalamud.DrunkenToad.Extensions;
 
 namespace RouletteDataCollector.Services
 {
     public sealed class PartyMemberService
     {
+        internal HashSet<string> inspectedPlayers = new HashSet<string>();
+
+        private List<Action<object?, ElapsedEventArgs>> timerCallbacks = new List<Action<object?, ElapsedEventArgs>>();
         private RouletteDataCollector plugin { get; init; }
         private IAddonLifecycle addonLifecycle { get; init; }
         private IPartyList partyList { get; init; }
         private IClientState clientState { get; init;}
         private PartyMemberAddedDelegate partyMemberAddedCallback;
         private PartyMemberGearDelegate partyMemberGearCallback;
+        private Timer closeInspectTimer = new Timer();
 
         public delegate void PartyMemberAddedDelegate(PartyMember newMember);
-        public unsafe delegate bool PartyMemberGearDelegate(PartyMember member, InventoryContainer* invContainer);
+        public unsafe delegate bool PartyMemberGearDelegate(string playerId, InventoryContainer* invContainer);
 
         public PartyMemberService(
             RouletteDataCollector plugin,
@@ -39,6 +50,9 @@ namespace RouletteDataCollector.Services
             this.clientState = clientState;
             this.partyMemberAddedCallback = partyMemberAddedCallback;
             this.partyMemberGearCallback = partyMemberGearCallback;
+
+            this.closeInspectTimer.Interval = 1000;
+            this.closeInspectTimer.AutoReset = false;
         }
 
         public void Start()
@@ -52,63 +66,68 @@ namespace RouletteDataCollector.Services
         }
 
         // inspects 1 player that has not already been inspected
-        // returns the number of players in party that have not been inspected
+        // returns the number of players that have not been inspected
         public unsafe uint? inspectParty()
         {
-            // do nothing if not in content
-            if (!this.plugin.inContent) return null;
-
-            // only inspect one player
-            bool inspectedOnce = false;
-
-            // return number of uninspected party members (clears when you leave instance)
-            uint countUninspected = 0;
-            for (int i = 0; i < this.partyList.Length; i++) 
+            if (RouletteDataCollector.objectTable == null)
             {
-                PartyMember? partyMember = this.partyList[i];
-                if (partyMember == null) continue;
+                return null;
+            }
 
-                // don't re-inspect (this includes between instances)
-                string memberUID = RouletteDataCollector.getPartyMemberUniqueString(partyMember);
-                bool inspected = this.plugin.inspectedPlayers.Contains(memberUID);
-                if (!inspected)
+            uint numberPlayers = 0;
+            foreach (GameObject obj in RouletteDataCollector.objectTable)
+            {
+                if (obj.IsValidPlayerCharacter())
                 {
-                    countUninspected++;
-                }
-
-                if (!inspected && !inspectedOnce)
-                {
-                    inspectedOnce = true;
-                    AgentInspect.Instance()->ExamineCharacter(partyMember.ObjectId);
-                    // TODO is it possible to check if we got the correct inventory container for the expected character?
-                    // currently rate limit is the best way to avoid this
-                    InventoryContainer* examineInvContainer = InventoryManager.Instance()->GetInventoryContainer(InventoryType.Examine);
-                    if (examineInvContainer == null)
-                    {
-                        this.plugin.log.Verbose($"InventoryContainer null");
-                        continue;
-                    }
-                    
-                    // the inventory can be not-null but empty
-                    // this is checked in callback because that is where items are iterated
-                    if (partyMemberGearCallback(partyMember, examineInvContainer))
-                    {
-                        // successfully inspected
-                        countUninspected--;
-                        this.plugin.inspectedPlayers.Add(memberUID);
-                    }
-
-                    // close Inspect window
-                    AtkUnitBase* baseAddon = (AtkUnitBase*)this.plugin.gameGui.GetAddonByName("CharacterInspect");
-                    if (baseAddon != null)
-                    {
-                        this.plugin.log.Verbose("Closing CharacterInspect via getter");
-                        baseAddon->Close(true);
-                    }
+                    numberPlayers++;
                 }
             }
 
-            return countUninspected;
+            foreach (GameObject obj in RouletteDataCollector.objectTable)
+            {
+                if (obj.IsValidPlayerCharacter())
+                {
+                    PlayerCharacter? pc = (PlayerCharacter?)RouletteDataCollector.objectTable.CreateObjectReference(obj.Address);
+                    if (pc != null)
+                    {
+                        string uid = RouletteDataCollector.getPlayerUid(pc);
+                        if (!inspectedPlayers.Contains(uid))
+                        {
+                            plugin?.log.Info($"Starting timer for {uid}");
+                            inspectedPlayers.Add(uid);
+                            AgentInspect.Instance()->ExamineCharacter(pc.ObjectId);
+                            var callback = (Object? source, ElapsedEventArgs e) => getDataFromExamineWindow(source, e, uid);
+                            this.timerCallbacks.Add(callback);
+                            this.closeInspectTimer.Elapsed += callback.Invoke;
+                            this.closeInspectTimer.Start();
+                            break;
+                        }
+                    }
+                }
+            }
+            return (uint?)(numberPlayers - inspectedPlayers.Count);
+        }
+
+        public void clearInspectedPlayers()
+        {
+            this.inspectedPlayers.Clear();
+        }
+
+        private unsafe void getDataFromExamineWindow(Object? source, ElapsedEventArgs e, string playerUid)
+        {
+            foreach (var callback in this.timerCallbacks)
+            {
+                this.closeInspectTimer.Elapsed -= callback.Invoke;
+            }
+            timerCallbacks.Clear();
+            // TODO is it possible to check if we got the correct inventory container for the expected character?
+            InventoryContainer* examineInvContainer = InventoryManager.Instance()->GetInventoryContainer(InventoryType.Examine);
+            if (examineInvContainer == null)
+            {
+                this.plugin.log.Verbose($"InventoryContainer null");
+                return;
+            }
+            partyMemberGearCallback(playerUid, examineInvContainer);
         }
 
         // detects when new players join party
