@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using Dalamud.DrunkenToad.Extensions;
@@ -9,6 +11,7 @@ namespace RouletteDataCollector.Windows;
 
 public class RDCConfigWindow : Window, IDisposable
 {
+    private RouletteDataCollector plugin;
     private RDCConfig configuration;
     private string versionNumber;
 
@@ -19,6 +22,7 @@ public class RDCConfigWindow : Window, IDisposable
         this.Size = new Vector2(232, 75);
         this.SizeCondition = ImGuiCond.FirstUseEver;
 
+        this.plugin = plugin;
         this.configuration = plugin.configuration;
 
         this.versionNumber = Assembly.GetCallingAssembly().VersionNumber().ToString();
@@ -34,15 +38,14 @@ public class RDCConfigWindow : Window, IDisposable
     {
         if (this.configuration.remainingInspections != null)
         {
-#pragma warning disable CS8603 // Possible null reference return.
-            return configuration.remainingInspections.ToString();
-#pragma warning restore CS8603 // Possible null reference return.
+            return configuration.remainingInspections.ToString()!;
         }
         else
         {
             return "?";
         }
     }
+
 
     public override void Draw()
     {
@@ -62,7 +65,14 @@ public class RDCConfigWindow : Window, IDisposable
         {
             this.configuration.Save();
         }
+        ImGui.SameLine();
+
         ImGui.Text($"Plugin version: {versionNumber}");
+        if (ImGui.Button("Debug1"))
+        {
+            this.configuration.OnDebugButton();
+        }
+        
         ImGui.Spacing();
         ImGui.Separator();
         ImGui.Spacing();

@@ -4,6 +4,13 @@ using System;
 
 using Dalamud.Plugin.Services;
 using System.Timers;
+using System.Collections;
+using System.Collections.Generic;
+using RouletteDataCollector.Structs;
+using RouletteDataCollector.Mappings;
+using AutoMapper;
+using System.Linq;
+using RouletteDataCollector.Services;
 
 namespace RouletteDataCollector
 {
@@ -19,6 +26,7 @@ namespace RouletteDataCollector
 
         public uint? remainingInspections { get; set; } = null; 
 
+
         // the below exist just to make saving less cumbersome
         [NonSerialized]
         private DalamudPluginInterface? pluginInterface;
@@ -27,7 +35,7 @@ namespace RouletteDataCollector
         public void Initialize(RouletteDataCollector plugin, DalamudPluginInterface pluginInterface)
         {
             this.buttonLockTimer.Elapsed += OnButtonLockTimerElapsed;
-            this.buttonLockTimer.Interval = 1000;
+            this.buttonLockTimer.Interval = 1500;
             this.buttonLockTimer.AutoReset = false;
             this.pluginInterface = pluginInterface;
             this.plugin = plugin;
@@ -38,6 +46,10 @@ namespace RouletteDataCollector
             this.pluginInterface!.SavePluginConfig(this);
         }
 
+        public void OnDebugButton()
+        {
+
+        }
 
         public void InspectButtonAction()
         {

@@ -15,22 +15,27 @@ using RouletteDataCollector.Windows;
 using RouletteDataCollector.Services;
 using RouletteDataCollector.Structs;
 using FFXIVClientStructs.FFXIV.Client.Game;
+using System.Linq;
+using AutoMapper;
+using RouletteDataCollector.Mappings;
 
 namespace RouletteDataCollector
 {
     public sealed class RouletteDataCollector : IDalamudPlugin
     {
         public string Name => "Roulette Data Collector";
-        private const string ConfigCommand = "/prdc";
+        private const string ConfigCommand = "/prdcconfig";
+        private const string BrowserCommand = "/prdcbrowse";
     
         // these are all cleared when exiting instance
         internal HashSet<string> inspectedPlayers = new HashSet<string>();
         internal Dictionary<string, string> playerToGearset = new Dictionary<string, string>();
         internal string? currentGUID = null;
         internal bool inContent = false;
+        private IMapper mapper;
 
         // saved between instances
-        internal Dictionary<string, string> playerToGUID = new Dictionary<string, string>();
+        internal HashSet<string> seenPlayers = new HashSet<string>();
 
         internal ToDoListService toDoListService { get; init; }
         internal DatabaseService databaseService { get; init; }
@@ -42,7 +47,7 @@ namespace RouletteDataCollector
 
         internal DalamudPluginInterface pluginInterface { get; init; }
         internal ICommandManager commandManager { get; init; }
-        internal IAddonEventManager addonEventManager { get; init; }
+        internal static IDataManager? dataManager { get; private set; }
         internal IAddonLifecycle addonLifecycle { get; init; }
         internal IDutyState dutyState { get; init; }
         internal IPartyList partyList  { get; init; }
@@ -50,12 +55,13 @@ namespace RouletteDataCollector
         internal IGameGui gameGui { get; init; }
 
         private RDCConfigWindow configWindow { get; init; }
+        private RDCBrowserWindow browseWindow;
 
         public RouletteDataCollector(
             DalamudPluginInterface pluginInterface,
             ICommandManager commandManager,
             IPluginLog log,
-            IAddonEventManager addonEventManager,
+            IDataManager dataManager,
             IAddonLifecycle addonLifecycle,
             IDutyState dutyState,
             IPartyList partyList,
@@ -66,7 +72,7 @@ namespace RouletteDataCollector
             this.log = log;
             this.pluginInterface = pluginInterface;
             this.commandManager = commandManager;
-            this.addonEventManager = addonEventManager;
+            RouletteDataCollector.dataManager = dataManager;
             this.addonLifecycle = addonLifecycle;
             this.dutyState = dutyState;
             this.partyList = partyList;
@@ -75,11 +81,18 @@ namespace RouletteDataCollector
 
             this.configuration = this.pluginInterface.GetPluginConfig() as RDCConfig ?? new RDCConfig();
             this.configuration.Initialize(this, this.pluginInterface);
+
             configWindow = new RDCConfigWindow(this);
             windowSystem.AddWindow(configWindow);
             this.commandManager.AddHandler(ConfigCommand, new CommandInfo(OnConfigCommand)
             {
-                HelpMessage = "Display roulette data collector configuration window."
+                HelpMessage = "Display configuration window."
+            });
+            browseWindow = new RDCBrowserWindow(this);
+            windowSystem.AddWindow(browseWindow);
+            this.commandManager.AddHandler(BrowserCommand, new CommandInfo(OnBrowseCommand)
+            {
+                HelpMessage = "Display database browser window. Mostly for debugging."
             });
             this.pluginInterface.UiBuilder.Draw += DrawUI;
             this.pluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
@@ -109,6 +122,12 @@ namespace RouletteDataCollector
                 this.inContent = startLocation.InContent();
                 this.log.Info($"Starting plugin while in content {this.inContent}");
             }
+
+            MapperConfiguration config = new MapperConfiguration(cfg => {
+                cfg.AddProfile<ListsToDBGearset>();
+                cfg.AddProfile<ListToDBMateriaset>(); });
+
+            this.mapper = config.CreateMapper();
         }
 
         public void Dispose()
@@ -130,11 +149,17 @@ namespace RouletteDataCollector
             configWindow.Dispose();
 
             this.commandManager.RemoveHandler(ConfigCommand);
+            this.commandManager.RemoveHandler(BrowserCommand);
         }
 
         private void OnConfigCommand(string command, string args)
         {
             configWindow.IsOpen = true;
+        }
+
+        private void OnBrowseCommand(string command, string args)
+        {
+            browseWindow.IsOpen = true;
         }
 
         private void DrawUI()
@@ -156,65 +181,41 @@ namespace RouletteDataCollector
         private unsafe bool OnPartyMemberExamine(PartyMember member, InventoryContainer* invContainer)
         {
             this.log.Verbose($"Inspecting {member.Name}");
-            // save created materia sets to link them to the gearset
-            List<string?> materiaSetGuids = new List<string?>(new string?[12]);
-            RDCGearset gear = new RDCGearset();
-            for (int i = 0; i < invContainer->Size; i++)
+            
+            List<uint> itemIds = Enumerable.Repeat(0U, 14).ToList();
+            List<string?> materiaGuids = Enumerable.Repeat<string?>(null, 14).ToList();
+            
+            for (int i = 0; i < 13; i++)
             {
-                // skip belt slot
-                if (i == 5) continue;
-
-                // i = item slot index with belt
-                // iAdjusted = item slot index without belt (for RDC structs)
-                int iAdjusted = i > 5 ? i-1 : i;
-                
+                List<(uint, uint)> materiaIds = Enumerable.Repeat((0U, 0U), 5).ToList();
                 InventoryItem* item = invContainer->GetInventorySlot(i);
                 if (item != null)
                 {
-                    if (i == (int)RDCGearSlot.Weapon && item->GetItemId() == 0)
+                    itemIds[i] = item->GetItemId();
+                    for (byte j = 0; j < item->GetMateriaCount() && j < 5; j++)
                     {
-                        this.log.Verbose($"{member.Name} weapon is null, didn't get inventory container correctly.");
-                        return false;
+                        materiaIds[j] = ((uint)item->GetMateriaId(j), (uint)item->GetMateriaGrade(j));
                     }
-                    
-                    // soulstone slot vs other slots
-                    if (i == 13)
-                    {
-                        gear.soulstone = item->GetItemId();
-                    }
-                    else 
-                    {
-                        gear.items[iAdjusted] = item->GetItemId();
-
-                        // create materia set
-                        RDCMateriaset materiaSet = new RDCMateriaset();
-                        bool gotMateria = false;
-                        for (byte j = 0; j < item->GetMateriaCount() && j < 5; j++)
-                        {
-                            gotMateria |=  item->GetMateriaGrade(j) != 0;
-                            materiaSet.materiaTypes[j] = item->GetMateriaId(j);
-                            materiaSet.materiaGrades[j] = item->GetMateriaGrade(j);
-                        }
-
-                        // skip creating if there is no materia
-                        if (gotMateria)
-                        {
-                            gear.materia[iAdjusted] = materiaSet;
-
-                            string matGuid = Guid.NewGuid().ToString();
-                            materiaSetGuids[iAdjusted] = matGuid;
-                            this.databaseService.MateriasetInsert(matGuid, materiaSet);
-                        }
-                    }
-
                 }
                 else
                 {
                     this.log.Verbose($"{member.Name} item {i}=null");
                 }
+
+                // if there is at least some materia
+                if (materiaIds[0].Item1 != 0)
+                {
+                    
+                    DBMateriaset matSet = mapper.Map<DBMateriaset>(materiaIds);
+                    string matSetGuid = Guid.NewGuid().ToString();
+                    matSet.id = matSetGuid;
+                    this.databaseService.MateriasetInsert(matSetGuid, matSet);
+                    materiaGuids[i] = matSetGuid;
+                }
             }
 
-            this.databaseService.GearsetGearUpdate(this.playerToGearset[getPartyMemberUniqueString(member)], gear, materiaSetGuids);
+            DBGearset gear = mapper.Map<DBGearset>((itemIds, materiaGuids));
+            this.databaseService.GearsetGearUpdate(this.playerToGearset[getPartyMemberUniqueString(member)], gear);
             return true;
         }
 
@@ -228,25 +229,26 @@ namespace RouletteDataCollector
             // should i just use this unique str as the key instead of guid? IDK
             string playerUniqueStr = getPartyMemberUniqueString(newMember);
 
-            // add player if not already detected
-            string playerGUID;
-            if (this.playerToGUID.ContainsKey(playerUniqueStr))
+            if (!this.seenPlayers.Contains(playerUniqueStr))
             {
-                playerGUID = this.playerToGUID[playerUniqueStr];
-            }
-            else
-            {
-                playerGUID = Guid.NewGuid().ToString();
-                this.playerToGUID.Add(playerUniqueStr, playerGUID);
-                this.databaseService.PlayerInsert(playerGUID, new RDCPartyMember(newMember.Name.ToString(), newMember.World.Id, 0));
+                this.seenPlayers.Add(playerUniqueStr);
+                DBPlayer player = new DBPlayer();
+                player.id = playerUniqueStr;
+                player.name = $"{newMember.Name}";
+                player.homeworld = (int?)newMember.World.Id;
+                player.collector = false;
+                this.databaseService.PlayerInsert(playerUniqueStr, player);
             }
 
             this.configuration.remainingInspections = null; 
 
             // add gearset
-            string gearsetGUID = Guid.NewGuid().ToString();
-            this.playerToGearset.Add(playerUniqueStr, gearsetGUID);
-            this.databaseService.GearsetInsert(gearsetGUID, playerGUID, this.currentGUID, newMember.ClassJob.Id, newMember.Level);
+            if (!this.playerToGearset.ContainsKey(playerUniqueStr))
+            {
+                string gearsetGUID = Guid.NewGuid().ToString();
+                this.playerToGearset.Add(playerUniqueStr, gearsetGUID);
+                this.databaseService.GearsetInsert(gearsetGUID, playerUniqueStr, this.currentGUID, newMember.ClassJob.Id, newMember.Level);
+            }
         }
 
         private void OnStartLocation(ToadLocation location)
