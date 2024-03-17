@@ -296,6 +296,7 @@ namespace RouletteDataCollector
                 this.currentGUID = null;
                 this.partyMemberService.clearInspectedPlayers();
                 this.playerToGearset.Clear();
+                this.configuration.remainingInspections = null; 
             }
         }
 

@@ -8,6 +8,7 @@ using RouletteDataCollector.Structs;
 using System.Collections.Generic;
 using AutoMapper;
 using RouletteDataCollector.Mappings;
+using Dalamud.DrunkenToad.Gui;
 
 namespace RouletteDataCollector.Windows;
 
@@ -39,6 +40,20 @@ public class RDCExamineWindow : Window, IDisposable
         {
             return "?";
         }
+    }
+
+    public override bool DrawConditions()
+    {
+        if (plugin.configuration.hideWhenDone && this.plugin.configuration.remainingInspections == 0)
+        {
+            return false;
+        }
+
+        if (plugin.configuration.hideOutsideContent && !plugin.inContent)
+        {
+            return false;
+        }
+        return base.DrawConditions();
     }
 
     public override void Draw()

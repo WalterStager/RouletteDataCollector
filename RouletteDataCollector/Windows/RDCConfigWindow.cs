@@ -25,7 +25,7 @@ public class RDCConfigWindow : Window, IDisposable
         this.plugin = plugin;
         this.configuration = plugin.configuration;
 
-        this.versionNumber = Assembly.GetCallingAssembly().VersionNumber().ToString();
+        this.versionNumber = Assembly.GetCallingAssembly().Version().Split('+', StringSplitOptions.RemoveEmptyEntries)[0].ToString();
     }
 
     public void Dispose()
@@ -38,6 +38,8 @@ public class RDCConfigWindow : Window, IDisposable
         // can't ref a property, so use a local copy
         bool enableSaveData = this.configuration.enableSaveData;
         bool lockExamineWindow = this.configuration.lockExamineWindow;
+        bool hideOutsideContent = this.configuration.hideOutsideContent;
+        bool hideWhenDone = this.configuration.hideWhenDone;
 
         ImGui.Text($"Plugin version: {versionNumber}");
 
@@ -67,6 +69,14 @@ public class RDCConfigWindow : Window, IDisposable
         if (ImGui.Checkbox("Lock position", ref lockExamineWindow))
         {
             this.configuration.lockExamineWindow = lockExamineWindow;
+        }
+        if (ImGui.Checkbox("Hide outside of content", ref hideOutsideContent))
+        {
+            this.configuration.hideOutsideContent = hideOutsideContent;
+        }
+        if (ImGui.Checkbox("Hide when done examining", ref hideWhenDone))
+        {
+            this.configuration.hideWhenDone = hideWhenDone;
         }
         ImGui.SameLine();
 

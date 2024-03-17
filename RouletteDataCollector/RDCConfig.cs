@@ -31,6 +31,8 @@ namespace RouletteDataCollector
 
         public bool enableSaveData { get; set; } = true;
         public bool lockExamineWindow { get; set; } = false;
+        public bool hideOutsideContent { get; set; } = false;
+        public bool hideWhenDone { get; set; } = false;
 
         public uint? remainingInspections { get; set; } = null;
         
@@ -43,7 +45,7 @@ namespace RouletteDataCollector
         public void Initialize(RouletteDataCollector plugin, DalamudPluginInterface pluginInterface)
         {
             this.buttonLockTimer.Elapsed += OnButtonLockTimerElapsed;
-            this.buttonLockTimer.Interval = 2000;
+            this.buttonLockTimer.Interval = 1500;
             this.buttonLockTimer.AutoReset = false;
             this.pluginInterface = pluginInterface;
             this.plugin = plugin;
@@ -66,13 +68,13 @@ namespace RouletteDataCollector
             if (!buttonLocked)
             {
                 this.buttonLocked = true;
+                this.buttonLockTimer.Start();
                 if (plugin == null) return;
                 // do nothing if not in content
                 if (!this.plugin.inContent) return;
                 // inspects 1 player that has not already been inspected
                 // returns the number of players that have not been inspected
                 remainingInspections = plugin.partyMemberService.inspectParty();
-                this.buttonLockTimer.Start();
             }
         }
 
