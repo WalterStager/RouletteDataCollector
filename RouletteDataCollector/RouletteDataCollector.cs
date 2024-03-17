@@ -20,6 +20,7 @@ using AutoMapper;
 using RouletteDataCollector.Mappings;
 using Dalamud.Game.ClientState.Objects;
 using Dalamud.Game.ClientState.Objects.SubKinds;
+using static FFXIVClientStructs.FFXIV.Client.UI.Misc.RaptureGearsetModule;
 
 namespace RouletteDataCollector
 {
@@ -200,7 +201,7 @@ namespace RouletteDataCollector
             List<uint> itemIds = Enumerable.Repeat(0U, 14).ToList();
             List<string?> materiaGuids = Enumerable.Repeat<string?>(null, 14).ToList();
             
-            for (int i = 0; i < 13; i++)
+            for (int i = 0; i < 14; i++)
             {
                 List<(uint, uint)> materiaIds = Enumerable.Repeat((0U, 0U), 5).ToList();
                 InventoryItem* item = invContainer->GetInventorySlot(i);
