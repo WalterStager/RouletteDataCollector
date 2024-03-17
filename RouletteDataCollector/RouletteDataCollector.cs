@@ -26,8 +26,9 @@ namespace RouletteDataCollector
     public sealed class RouletteDataCollector : IDalamudPlugin
     {
         public string Name => "Roulette Data Collector";
-        private const string ConfigCommand = "/prdcconfig";
-        private const string BrowserCommand = "/prdcbrowse";
+        internal const string ConfigCommand = "/prdcconfig";
+        internal const string BrowserCommand = "/prdcbrowse";
+        internal const string ExamineCommand = "/prdcexamine";
     
         // these are all cleared when exiting instance
         internal Dictionary<string, string> playerToGearset = new Dictionary<string, string>();
@@ -58,7 +59,8 @@ namespace RouletteDataCollector
         internal static IObjectTable? objectTable { get; private set; }
 
         private RDCConfigWindow configWindow { get; init; }
-        private RDCBrowserWindow browseWindow;
+        private RDCBrowserWindow browseWindow { get; init; }
+        private RDCExamineWindow examineWindow { get; init; }
 
         public RouletteDataCollector(
             DalamudPluginInterface pluginInterface,
@@ -90,6 +92,7 @@ namespace RouletteDataCollector
             this.configuration = this.pluginInterface.GetPluginConfig() as RDCConfig ?? new RDCConfig();
             this.configuration.Initialize(this, this.pluginInterface);
 
+            // add windows
             configWindow = new RDCConfigWindow(this);
             windowSystem.AddWindow(configWindow);
             this.commandManager.AddHandler(ConfigCommand, new CommandInfo(OnConfigCommand)
@@ -102,6 +105,13 @@ namespace RouletteDataCollector
             {
                 HelpMessage = "Display database browser window. Mostly for debugging."
             });
+            examineWindow = new RDCExamineWindow(this);
+            windowSystem.AddWindow(examineWindow);
+            this.commandManager.AddHandler(ExamineCommand, new CommandInfo(OnExamineCommand)
+            {
+                HelpMessage = "Display examine window."
+            });
+            examineWindow.IsOpen = true;
             this.pluginInterface.UiBuilder.Draw += DrawUI;
             this.pluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
 
@@ -162,6 +172,11 @@ namespace RouletteDataCollector
         private void OnBrowseCommand(string command, string args)
         {
             browseWindow.IsOpen = true;
+        }
+
+        private void OnExamineCommand(string command, string args)
+        {
+            examineWindow.IsOpen = !examineWindow.IsOpen;
         }
 
         private void DrawUI()

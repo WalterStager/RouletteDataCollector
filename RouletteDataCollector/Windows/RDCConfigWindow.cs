@@ -28,62 +28,65 @@ public class RDCConfigWindow : Window, IDisposable
         this.versionNumber = Assembly.GetCallingAssembly().VersionNumber().ToString();
     }
 
-
     public void Dispose()
     {
         
     }
 
-    private string remainingInspectionsStr()
-    {
-        if (this.configuration.remainingInspections != null)
-        {
-            return configuration.remainingInspections.ToString()!;
-        }
-        else
-        {
-            return "?";
-        }
-    }
-
-
     public override void Draw()
     {
         // can't ref a property, so use a local copy
-        var configValue = this.configuration.enableSaveData;
-        
-        if (ImGui.Checkbox("Enable saving data", ref configValue))
-        {
-            this.configuration.enableSaveData = configValue;
-        }
+        bool enableSaveData = this.configuration.enableSaveData;
+        bool lockExamineWindow = this.configuration.lockExamineWindow;
+
+        ImGui.Text($"Plugin version: {versionNumber}");
+
+        ImGui.Spacing();
+        ImGui.Separator();
+        ImGui.Spacing();
+
+        ImGui.Text("General configuration: (?)");
         if (ImGui.IsItemHovered())
         {
-            ImGui.SetTooltip("Tooltip here.");
+            ImGui.SetTooltip($"Use {RouletteDataCollector.ConfigCommand} to open this window.");
         }
+        if (ImGui.Checkbox("Record data", ref enableSaveData))
+        {
+            this.configuration.enableSaveData = enableSaveData;
+        }
+
+        ImGui.Spacing();
+        ImGui.Separator();
+        ImGui.Spacing();
+
+        ImGui.Text("Examine window options: (?)");
+        if (ImGui.IsItemHovered())
+        {
+            ImGui.SetTooltip($"Use {RouletteDataCollector.ExamineCommand} to open or close the window.");
+        }
+        if (ImGui.Checkbox("Lock position", ref lockExamineWindow))
+        {
+            this.configuration.lockExamineWindow = lockExamineWindow;
+        }
+        ImGui.SameLine();
+
+        ImGui.Spacing();
+        ImGui.Separator();
+        ImGui.Spacing();
+
+        ImGui.Text("Database browser Window options: (?)");
+        if (ImGui.IsItemHovered())
+        {
+            ImGui.SetTooltip($"Use {RouletteDataCollector.BrowserCommand} to open the window.");
+        }
+
+        ImGui.Spacing();
+        ImGui.Separator();
+        ImGui.Spacing();
 
         if (ImGui.Button("Save config"))
         {
             this.configuration.Save();
         }
-        ImGui.SameLine();
-
-        ImGui.Text($"Plugin version: {versionNumber}");
-        if (ImGui.Button("Debug1"))
-        {
-            this.configuration.OnDebugButton();
-        }
-        
-        ImGui.Spacing();
-        ImGui.Separator();
-        ImGui.Spacing();
-
-        if (this.configuration.buttonLocked) ImGui.BeginDisabled();
-        if (ImGui.Button("Inspect party member")) 
-        {
-            this.configuration.InspectButtonAction();
-        }
-        if (this.configuration.buttonLocked) ImGui.EndDisabled();
-        ImGui.SameLine();
-        ImGui.Text($"Remaining inspections: {remainingInspectionsStr()}");
     }
 }

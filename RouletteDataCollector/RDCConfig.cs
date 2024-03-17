@@ -30,6 +30,7 @@ namespace RouletteDataCollector
         public int Version { get; set; } = 0;
 
         public bool enableSaveData { get; set; } = true;
+        public bool lockExamineWindow { get; set; } = false;
 
         public uint? remainingInspections { get; set; } = null;
         
