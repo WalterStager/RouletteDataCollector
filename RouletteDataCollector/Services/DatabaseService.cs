@@ -138,7 +138,7 @@ public sealed class DatabaseService
             player.created = timestamp;
             player.updated = timestamp;
             plugin.log.Info($"Player INSERT {player}");
-            int rowsAffected = this.sqconn.Execute("INSERT OR IGNORE Players (id, created, updated, name, homeworld, collector) VALUES (@id, @created, @updated, @name, @homeworld, @collector)", player);
+            int rowsAffected = this.sqconn.Execute("INSERT OR IGNORE INTO Players (id, created, updated, name, homeworld, collector) VALUES (@id, @created, @updated, @name, @homeworld, @collector)", player);
             if (rowsAffected != 1)
             {
                 this.plugin.log.Warning($"Player INSERT affected {rowsAffected} rows instead of 1");
