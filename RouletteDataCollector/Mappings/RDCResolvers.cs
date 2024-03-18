@@ -54,4 +54,10 @@ public class RDCResolvers
     {
         return input == 0 ? null : input;
     }
+
+    public static string? resolveRace(int? race)
+    {
+        if (race == null) return null;
+        return RouletteDataCollector.dataManager?.GetExcelSheet<Race>()?.GetRow((uint)race)?.Masculine!; // The sheet has Masculine and Femenine names for each race but (in english) they are the same.
+    }
 }

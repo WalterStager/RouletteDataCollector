@@ -232,10 +232,11 @@ namespace RouletteDataCollector
             return rdcmapper.mapper.Map<DBGearset>((itemIds, materiaGuids));
         }
 
-        private unsafe bool OnPartyMemberExamine(string playerId, InventoryContainer* invContainer)
+        private unsafe bool OnPartyMemberExamine(string playerId, int race, InventoryContainer* invContainer)
         {
             this.log.Info($"Inspecting {playerId}");
             DBGearset gear = getInvContainerIds(invContainer);
+            gear.race = race;
             this.databaseService.GearsetGearUpdate(this.playerToGearset[playerId], gear);
             return true;
         }

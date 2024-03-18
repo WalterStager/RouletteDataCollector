@@ -44,12 +44,14 @@ public class DBGearset
     public override string ToString()
     {
         return @$"
-        DBMateriaset {id}
-            player {player}
-            weapon {weapon}
-            head   {head}
-            body   {body}
-            ss     {soulstone}";
+            DBGearset
+                id      {id}
+                player  {player}
+                race    {race}
+                weapon  {weapon}
+                head    {head}
+                body    {body}
+                soulst  {soulstone}";
     }
 }
 

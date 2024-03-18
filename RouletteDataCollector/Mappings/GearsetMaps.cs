@@ -13,6 +13,8 @@ public class DBGearsetToResolvedGearset : Profile
         CreateMap<DBGearset, ResolvedGearset>()
             .ForMember( dest => dest.job,
                         opti => opti.MapFrom(src => RDCResolvers.resolveJob(src.job)))
+            .ForMember( dest => dest.race,
+                        opti => opti.MapFrom(src => RDCResolvers.resolveRace(src.race)))
             .ForMember( dest => dest.weapon,
                         opti => opti.MapFrom(src => RDCResolvers.resolveItem(src.weapon)))
             .ForMember( dest => dest.offhand,

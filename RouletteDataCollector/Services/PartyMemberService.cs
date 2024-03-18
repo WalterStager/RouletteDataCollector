@@ -33,7 +33,7 @@ namespace RouletteDataCollector.Services
         private Timer closeInspectTimer = new Timer();
 
         public delegate void PartyMemberAddedDelegate(PartyMember newMember);
-        public unsafe delegate bool PartyMemberGearDelegate(string playerId, InventoryContainer* invContainer);
+        public unsafe delegate bool PartyMemberGearDelegate(string playerId, int race, InventoryContainer* invContainer);
 
         public PartyMemberService(
             RouletteDataCollector plugin,
@@ -91,12 +91,13 @@ namespace RouletteDataCollector.Services
                     if (pc != null)
                     {
                         string uid = RouletteDataCollector.getPlayerUid(pc);
+                        int race = (int)pc.Customize[(int)CustomizeIndex.Race];
                         if (!inspectedPlayers.Contains(uid))
                         {
                             plugin?.log.Info($"Starting timer for {uid}");
                             inspectedPlayers.Add(uid);
                             AgentInspect.Instance()->ExamineCharacter(pc.ObjectId);
-                            var callback = (Object? source, ElapsedEventArgs e) => getDataFromExamineWindow(source, e, uid);
+                            var callback = (Object? source, ElapsedEventArgs e) => getDataFromExamineWindow(source, e, uid, race);
                             this.timerCallbacks.Add(callback);
                             this.closeInspectTimer.Elapsed += callback.Invoke;
                             this.closeInspectTimer.Start();
@@ -113,7 +114,7 @@ namespace RouletteDataCollector.Services
             this.inspectedPlayers.Clear();
         }
 
-        private unsafe void getDataFromExamineWindow(Object? source, ElapsedEventArgs e, string playerUid)
+        private unsafe void getDataFromExamineWindow(Object? source, ElapsedEventArgs e, string playerUid, int race)
         {
             foreach (var callback in this.timerCallbacks)
             {
@@ -127,7 +128,7 @@ namespace RouletteDataCollector.Services
                 this.plugin.log.Verbose($"InventoryContainer null");
                 return;
             }
-            partyMemberGearCallback(playerUid, examineInvContainer);
+            partyMemberGearCallback(playerUid, race, examineInvContainer);
         }
 
         // detects when new players join party

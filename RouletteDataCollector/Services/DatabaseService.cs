@@ -153,7 +153,27 @@ public sealed class DatabaseService
             DateTime timestamp = GetTimestamp();
             var data = new {Guid = guid, Created = timestamp, Updated = timestamp, Player = playerGuid, Roulette = rouletteGuid, Job = job, Level = level};
             plugin.log.Info($"Gearset INSERT {data}");
-            int rowsAffected = this.sqconn.Execute("INSERT INTO Gearsets (id, created, updated, player, roulette, job, level) VALUES (@Guid, @Created, @Updated, @Player, @Roulette, @Job, @Level)", data);
+            int rowsAffected = this.sqconn.Execute(@"
+                INSERT INTO Gearsets
+                (
+                    id,
+                    created,
+                    updated,
+                    player,
+                    roulette,
+                    job,
+                    level
+                )
+                VALUES
+                (
+                    @Guid,
+                    @Created,
+                    @Updated,
+                    @Player,
+                    @Roulette,
+                    @Job,
+                    @Level
+                )", data);
             if (rowsAffected != 1)
             {
                 this.plugin.log.Warning($"Gearset INSERT affected {rowsAffected} rows instead of 1");
@@ -170,6 +190,7 @@ public sealed class DatabaseService
             int rowsAffected = this.sqconn.Execute($@"
                 UPDATE Gearsets SET
                     updated = @updated,
+                    race = @race,
                     weapon = @weapon,
                     offhand = @offhand,
                     head = @head,
