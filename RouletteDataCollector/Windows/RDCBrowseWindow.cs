@@ -154,6 +154,11 @@ public class RDCBrowserWindow : Window, IDisposable
         }
         ImGui.SameLine();
         ImGui.Text($"Page {this.dbPageIndex}");
+        ImGui.SameLine();
+        if (ImGui.Button("Refresh"))
+        {
+            getDBTable();
+        }
 
         if (this.dbTableData != null)
         {
