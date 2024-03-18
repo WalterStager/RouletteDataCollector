@@ -1,22 +1,12 @@
 using System;
-using System.Numerics;
-using System.Reflection;
-using System.Linq;
 using Dalamud.Interface.Windowing;
 using ImGuiNET;
-using RouletteDataCollector.Structs;
-using System.Collections.Generic;
-using AutoMapper;
-using RouletteDataCollector.Mappings;
-using Dalamud.DrunkenToad.Gui;
 
 namespace RouletteDataCollector.Windows;
 
 public class RDCExamineWindow : Window, IDisposable
 {
     private RouletteDataCollector plugin;
-
-    private IEnumerable<object>? dbTableData = null;
 
     public RDCExamineWindow(RouletteDataCollector plugin) : base(
         $"Roulette Data Collector Examine window",

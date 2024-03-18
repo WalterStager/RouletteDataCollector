@@ -2,22 +2,7 @@
 using Dalamud.Plugin;
 using System;
 
-using Dalamud.Plugin.Services;
 using System.Timers;
-using System.Collections;
-using System.Collections.Generic;
-using RouletteDataCollector.Structs;
-using RouletteDataCollector.Mappings;
-using AutoMapper;
-using System.Linq;
-using RouletteDataCollector.Services;
-using FFXIVClientStructs.FFXIV.Client.Game;
-using Dalamud.Game.ClientState.Party;
-using FFXIVClientStructs.FFXIV.Client.UI.Agent;
-using Dalamud.Game.ClientState.Objects.Types;
-using Dalamud.Game.ClientState.Objects.Enums;
-using Dalamud.Game.ClientState.Objects.SubKinds;
-using Dalamud.DrunkenToad.Extensions;
 
 namespace RouletteDataCollector
 {

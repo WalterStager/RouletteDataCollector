@@ -16,11 +16,8 @@ using RouletteDataCollector.Services;
 using RouletteDataCollector.Structs;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using System.Linq;
-using AutoMapper;
-using RouletteDataCollector.Mappings;
 using Dalamud.Game.ClientState.Objects;
 using Dalamud.Game.ClientState.Objects.SubKinds;
-using static FFXIVClientStructs.FFXIV.Client.UI.Misc.RaptureGearsetModule;
 
 namespace RouletteDataCollector
 {

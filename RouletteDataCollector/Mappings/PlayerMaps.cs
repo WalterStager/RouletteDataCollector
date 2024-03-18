@@ -1,7 +1,5 @@
 using AutoMapper;
-using Lumina.Excel.GeneratedSheets;
 using RouletteDataCollector.Structs;
-using RouletteDataCollector.Mappings;
 
 namespace RouletteDataCollector.Mappings;
 

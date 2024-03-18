@@ -2,7 +2,6 @@ using System;
 
 namespace RouletteDataCollector.Structs;
 
-
 public class DBPlayer
 {
     public string id { get; set; } = "";

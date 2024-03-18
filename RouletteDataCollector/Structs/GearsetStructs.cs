@@ -1,5 +1,4 @@
 using System;
-using RouletteDataCollector.Structs;
 
 namespace RouletteDataCollector.Structs;
 

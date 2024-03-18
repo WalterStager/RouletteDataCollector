@@ -6,8 +6,6 @@ using Dalamud.Interface.Windowing;
 using ImGuiNET;
 using RouletteDataCollector.Structs;
 using System.Collections.Generic;
-using AutoMapper;
-using RouletteDataCollector.Mappings;
 
 namespace RouletteDataCollector.Windows;
 

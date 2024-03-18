@@ -7,8 +7,6 @@ using System.Data.SQLite;
 using RouletteDataCollector.Structs;
 using Dalamud.DrunkenToad.Extensions;
 using System.Collections.Generic;
-using System.Linq;
-using System.Data;
 
 namespace RouletteDataCollector.Services;
 

@@ -1,10 +1,8 @@
 
 using System;
-using Dalamud.DrunkenToad.Extensions;
 using Lumina.Excel.GeneratedSheets;
 
 namespace RouletteDataCollector.Mappings;
-
 
 public class RDCResolvers
 {
