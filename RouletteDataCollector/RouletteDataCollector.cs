@@ -47,12 +47,12 @@ namespace RouletteDataCollector
         internal DalamudPluginInterface pluginInterface { get; init; }
         internal ICommandManager commandManager { get; init; }
         internal static IDataManager? dataManager { get; private set; }
-        internal IAddonLifecycle addonLifecycle { get; init; }
-        internal IDutyState dutyState { get; init; }
-        internal IPartyList partyList  { get; init; }
-        internal IClientState clientState { get; init; }
-        internal IGameGui gameGui { get; init; }
-        internal RDCMapper rdcmapper { get; init; }
+        internal static IAddonLifecycle? addonLifecycle { get; private set; }
+        internal static IDutyState? dutyState { get; private set; }
+        internal static IPartyList? partyList  { get; private set; }
+        internal static IClientState? clientState { get; private set; }
+        internal static IGameGui? gameGui { get; private set; }
+        internal static RDCMapper? rdcmapper { get; private set; }
         internal static ITargetManager? targetManager { get; private set; }
         internal static IObjectTable? objectTable { get; private set; }
 
@@ -78,11 +78,11 @@ namespace RouletteDataCollector
             this.pluginInterface = pluginInterface;
             this.commandManager = commandManager;
             RouletteDataCollector.dataManager = dataManager;
-            this.addonLifecycle = addonLifecycle;
-            this.dutyState = dutyState;
-            this.partyList = partyList;
-            this.clientState = clientState;
-            this.gameGui = gameGui;
+            RouletteDataCollector.addonLifecycle = addonLifecycle;
+            RouletteDataCollector.dutyState = dutyState;
+            RouletteDataCollector.partyList = partyList;
+            RouletteDataCollector.clientState = clientState;
+            RouletteDataCollector.gameGui = gameGui;
             RouletteDataCollector.targetManager = targetManager;
             RouletteDataCollector.objectTable = objectTable;
             rdcmapper = new RDCMapper(this);
@@ -113,12 +113,12 @@ namespace RouletteDataCollector
             this.pluginInterface.UiBuilder.Draw += DrawUI;
             this.pluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
 
-            this.toDoListService = new ToDoListService(this, this.addonLifecycle, this.OnRouletteQueue);
+            this.toDoListService = new ToDoListService(this, this.OnRouletteQueue);
             this.databaseService = new DatabaseService(this, Path.Combine(this.pluginInterface.GetPluginConfigDirectory(), "database.db"));
             // find a better way to pass unsafe callback OnPartyMemberExamine
             unsafe
             {
-                this.partyMemberService = new PartyMemberService(this, this.addonLifecycle, this.partyList, this.clientState, this.OnPartyMemberAdded, this.OnPartyMemberExamine);
+                this.partyMemberService = new PartyMemberService(this, this.OnPartyMemberAdded, this.OnPartyMemberExamine);
             }
             
             DalamudContext.Initialize(pluginInterface);
@@ -129,8 +129,8 @@ namespace RouletteDataCollector
 
             DalamudContext.PlayerLocationManager.LocationStarted += this.OnStartLocation;
             DalamudContext.PlayerLocationManager.LocationEnded += this.OnEndLocation;
-            this.dutyState.DutyWiped += this.OnDutyWipe;
-            this.dutyState.DutyCompleted += this.OnDutyCompleted;
+            RouletteDataCollector.dutyState.DutyWiped += this.OnDutyWipe;
+            RouletteDataCollector.dutyState.DutyCompleted += this.OnDutyCompleted;
 
             ToadLocation? startLocation = DalamudContext.PlayerLocationManager.GetCurrentLocation();
             if (startLocation != null)
@@ -147,8 +147,11 @@ namespace RouletteDataCollector
             DalamudContext.PlayerLocationManager.Dispose();
             DalamudContext.Dispose();
 
-            this.dutyState.DutyWiped -= this.OnDutyWipe;
-            this.dutyState.DutyCompleted -= this.OnDutyCompleted;
+            if (RouletteDataCollector.dutyState != null)
+            {
+                RouletteDataCollector.dutyState.DutyWiped -= this.OnDutyWipe;
+                RouletteDataCollector.dutyState.DutyCompleted -= this.OnDutyCompleted;
+            }
 
             this.toDoListService.Stop();
             this.databaseService.Stop();
@@ -193,7 +196,7 @@ namespace RouletteDataCollector
             this.databaseService.RouletteInsert(this.currentGUID, rouletteType);
         }
 
-        public unsafe DBGearset getInvContainerIds(InventoryContainer* invContainer)
+        public unsafe DBGearset? getInvContainerIds(InventoryContainer* invContainer)
         {
             List<uint> itemIds = Enumerable.Repeat(0U, 14).ToList();
             List<string?> materiaGuids = Enumerable.Repeat<string?>(null, 14).ToList();
@@ -216,9 +219,9 @@ namespace RouletteDataCollector
                 }
 
                 // if there is at least some materia
-                if (materiaIds[0].Item1 != 0)
+                if (materiaIds[0].Item1 != 0 && RouletteDataCollector.rdcmapper != null)
                 {
-                    DBMateriaset matSet = rdcmapper.mapper.Map<DBMateriaset>(materiaIds);
+                    DBMateriaset matSet = RouletteDataCollector.rdcmapper.mapper.Map<DBMateriaset>(materiaIds);
                     string matSetGuid = Guid.NewGuid().ToString();
                     matSet.id = matSetGuid;
                     this.databaseService.MateriasetInsert(matSetGuid, matSet);
@@ -226,16 +229,24 @@ namespace RouletteDataCollector
                 }
             }
             
-            return rdcmapper.mapper.Map<DBGearset>((itemIds, materiaGuids));
+            
+            return rdcmapper?.mapper.Map<DBGearset>((itemIds, materiaGuids));
         }
 
         private unsafe bool OnPartyMemberExamine(string playerId, int race, InventoryContainer* invContainer)
         {
             this.log.Info($"Inspecting {playerId}");
-            DBGearset gear = getInvContainerIds(invContainer);
-            gear.race = race;
-            this.databaseService.GearsetGearUpdate(this.playerToGearset[playerId], gear);
-            return true;
+            DBGearset? gear = getInvContainerIds(invContainer);
+            if (gear != null)
+            {
+                gear.race = race;
+                this.databaseService.GearsetGearUpdate(this.playerToGearset[playerId], gear);
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         private void OnPartyMemberAdded(PartyMember newMember)

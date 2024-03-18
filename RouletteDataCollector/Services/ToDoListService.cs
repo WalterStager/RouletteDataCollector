@@ -9,30 +9,27 @@ namespace RouletteDataCollector.Services
     public sealed class ToDoListService
     {
         private RouletteDataCollector plugin{ get; init; }
-        private IAddonLifecycle addonLifecycle { get; init; }
         private ToDoListRouletteInfoDelegate toDoListRouletteInfoCallback { get; init; }
         
         public delegate void ToDoListRouletteInfoDelegate(string rouletteType);
 
         public ToDoListService(
             RouletteDataCollector plugin,
-            IAddonLifecycle addonLifecycle,
             ToDoListRouletteInfoDelegate toDoListRouletteInfoCallback)
         {
             plugin.log.Debug("Start of RouletteDataCollector.ToDoListService constructor");
-            this.addonLifecycle = addonLifecycle;
             this.plugin = plugin;
             this.toDoListRouletteInfoCallback = toDoListRouletteInfoCallback;
         }
 
         public void Start()
         {
-            this.addonLifecycle.RegisterListener(AddonEvent.PostRequestedUpdate, "_ToDoList", this.ToDoListPostRequestedUpdate);
+            RouletteDataCollector.addonLifecycle?.RegisterListener(AddonEvent.PostRequestedUpdate, "_ToDoList", this.ToDoListPostRequestedUpdate);
         }
 
         public void Stop()
         {
-            this.addonLifecycle.RegisterListener(AddonEvent.PostRequestedUpdate, "_ToDoList", this.ToDoListPostRequestedUpdate);
+            RouletteDataCollector.addonLifecycle?.RegisterListener(AddonEvent.PostRequestedUpdate, "_ToDoList", this.ToDoListPostRequestedUpdate);
         }
 
         // can return null

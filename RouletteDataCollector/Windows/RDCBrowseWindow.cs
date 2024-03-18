@@ -48,25 +48,28 @@ public class RDCBrowserWindow : Window, IDisposable
         }
         else
         {
-            this.plugin?.log.Info("Set dbTableData");
+            if (RouletteDataCollector.rdcmapper == null)
+            {
+                this.plugin?.log.Verbose("Couldn't get dbTable because rdcmapper is null");
+                return;
+            }
 
             switch ((RDCDatabaseTable)this.comboIndex)
             {
                 case RDCDatabaseTable.Gearsets:
-                    this.dbTableData = this.plugin?.databaseService.QueryRecentlyUpdated<DBGearset>((RDCDatabaseTable)this.comboIndex, 10, (uint)(10 * dbPageIndex)).Select<DBGearset, ResolvedGearset>(element => plugin.rdcmapper.mapper.Map<ResolvedGearset>(element)).Cast<object>();
+                    this.dbTableData = this.plugin?.databaseService.QueryRecentlyUpdated<DBGearset>((RDCDatabaseTable)this.comboIndex, 10, (uint)(10 * dbPageIndex)).Select<DBGearset, ResolvedGearset>(element => RouletteDataCollector.rdcmapper.mapper.Map<ResolvedGearset>(element)).Cast<object>();
                     break;
                 case RDCDatabaseTable.Roulettes:
-                    this.dbTableData = this.plugin?.databaseService.QueryRecentlyUpdated<DBRoulette>((RDCDatabaseTable)this.comboIndex, 10, (uint)(10 * dbPageIndex)).Select(element => plugin.rdcmapper.mapper.Map<ResolvedRoulette>(element)).Cast<object>();
+                    this.dbTableData = this.plugin?.databaseService.QueryRecentlyUpdated<DBRoulette>((RDCDatabaseTable)this.comboIndex, 10, (uint)(10 * dbPageIndex)).Select(element => RouletteDataCollector.rdcmapper.mapper.Map<ResolvedRoulette>(element)).Cast<object>();
                     break;
                 case RDCDatabaseTable.Players:
-                    this.dbTableData = this.plugin?.databaseService.QueryRecentlyUpdated<DBPlayer>((RDCDatabaseTable)this.comboIndex, 10, (uint)(10 * dbPageIndex)).Select(element => plugin.rdcmapper.mapper.Map<ResolvedPlayer>(element)).Cast<object>();
+                    this.dbTableData = this.plugin?.databaseService.QueryRecentlyUpdated<DBPlayer>((RDCDatabaseTable)this.comboIndex, 10, (uint)(10 * dbPageIndex)).Select(element => RouletteDataCollector.rdcmapper.mapper.Map<ResolvedPlayer>(element)).Cast<object>();
                     break;
                 case RDCDatabaseTable.Materiasets:
-                    this.dbTableData = this.plugin?.databaseService.QueryRecentlyUpdated<DBMateriaset>((RDCDatabaseTable)this.comboIndex, 10, (uint)(10 * dbPageIndex)).Select(element => plugin.rdcmapper.mapper.Map<ResolvedMateriaset>(element)).Cast<object>();
+                    this.dbTableData = this.plugin?.databaseService.QueryRecentlyUpdated<DBMateriaset>((RDCDatabaseTable)this.comboIndex, 10, (uint)(10 * dbPageIndex)).Select(element => RouletteDataCollector.rdcmapper.mapper.Map<ResolvedMateriaset>(element)).Cast<object>();
                     break;
                 default: break;
             }
-            
         }
     }
 

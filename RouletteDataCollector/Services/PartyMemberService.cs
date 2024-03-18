@@ -21,9 +21,6 @@ namespace RouletteDataCollector.Services
 
         private List<Action<object?, ElapsedEventArgs>> timerCallbacks = new List<Action<object?, ElapsedEventArgs>>();
         private RouletteDataCollector plugin { get; init; }
-        private IAddonLifecycle addonLifecycle { get; init; }
-        private IPartyList partyList { get; init; }
-        private IClientState clientState { get; init;}
         private PartyMemberAddedDelegate partyMemberAddedCallback;
         private PartyMemberGearDelegate partyMemberGearCallback;
         private Timer closeInspectTimer = new Timer();
@@ -33,17 +30,11 @@ namespace RouletteDataCollector.Services
 
         public PartyMemberService(
             RouletteDataCollector plugin,
-            IAddonLifecycle addonLifecycle,
-            IPartyList partyList,
-            IClientState clientState,
             PartyMemberAddedDelegate partyMemberAddedCallback,
             PartyMemberGearDelegate partyMemberGearCallback)
         {
             plugin.log.Debug("Start of RouletteDataCollector.PartyMemberService constructor");
             this.plugin = plugin;
-            this.addonLifecycle = addonLifecycle;
-            this.partyList = partyList;
-            this.clientState = clientState;
             this.partyMemberAddedCallback = partyMemberAddedCallback;
             this.partyMemberGearCallback = partyMemberGearCallback;
 
@@ -53,12 +44,12 @@ namespace RouletteDataCollector.Services
 
         public void Start()
         {
-            this.addonLifecycle.RegisterListener(AddonEvent.PostRequestedUpdate, "_PartyList", PartyListUpdateListener);
+            RouletteDataCollector.addonLifecycle?.RegisterListener(AddonEvent.PostRequestedUpdate, "_PartyList", PartyListUpdateListener);
         }
 
         public void Stop()
         {
-            this.addonLifecycle.UnregisterListener(AddonEvent.PostRequestedUpdate, "_PartyList", PartyListUpdateListener);
+            RouletteDataCollector.addonLifecycle?.UnregisterListener(AddonEvent.PostRequestedUpdate, "_PartyList", PartyListUpdateListener);
         }
 
         // inspects 1 player that has not already been inspected
@@ -130,9 +121,11 @@ namespace RouletteDataCollector.Services
         // detects when new players join party
         private void PartyListUpdateListener(AddonEvent type, AddonArgs args)
         {
-            for (int i = 0; i < this.partyList.Length; i++)
+            if (RouletteDataCollector.partyList == null) return;
+
+            for (int i = 0; i < RouletteDataCollector.partyList.Length; i++)
             {
-                PartyMember? partyMember = this.partyList[i];
+                PartyMember? partyMember = RouletteDataCollector.partyList[i];
                 if (partyMember != null)
                 {
                     this.partyMemberAddedCallback(partyMember);
