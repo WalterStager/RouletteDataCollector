@@ -3,7 +3,7 @@
         "Author": "Walter Stager",
         "Name": "Roulette Data Collector",
         "InternalName": "RouletteDataCollector",
-        "AssemblyVersion": "0.3.0.0",
+        "AssemblyVersion": "0.3.1.0",
         "Description": "Collects data on duty roulettes.\nData goes to a local database.",
         "ApplicableVersion": "any",
         "Tags": [
@@ -19,8 +19,8 @@
         "Punchline": "Collects data on duty roulettes",
         "AcceptsFeedback": true,
         "RepoUrl": "https://github.com/WalterStager/RouletteDataCollector",
-        "DownloadLinkInstall": "https://github.com/WalterStager/RouletteDataCollector/releases/download/v0.3.0.0/latest.zip",
-        "DownloadLinkTesting": "https://github.com/WalterStager/RouletteDataCollector/releases/download/v0.3.0.0/latest.zip",
-        "DownloadLinkUpdate": "https://github.com/WalterStager/RouletteDataCollector/releases/download/v0.3.0.0/latest.zip"
+        "DownloadLinkInstall": "https://github.com/WalterStager/RouletteDataCollector/releases/latest/download/latest.zip",
+        "DownloadLinkTesting": "https://github.com/WalterStager/RouletteDataCollector/releases/latest/download/latest.zip",
+        "DownloadLinkUpdate": "https://github.com/WalterStager/RouletteDataCollector/releases/latest/download/latest.zip"
     }
 ]
