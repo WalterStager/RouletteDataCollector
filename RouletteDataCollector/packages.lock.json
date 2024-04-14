@@ -1,7 +1,7 @@
 {
   "version": 1,
   "dependencies": {
-    "net7.0-windows7.0": {
+    "net8.0-windows7.0": {
       "AutoMapper": {
         "type": "Direct",
         "requested": "[13.0.1, )",
@@ -35,11 +35,11 @@
       },
       "System.Data.SQLite.Core": {
         "type": "Direct",
-        "requested": "[1.0.118, )",
-        "resolved": "1.0.118",
-        "contentHash": "2V1PsfBeqWlZxF/VtB8lQKPfDBayCU8zD5Xc3Mq7cILOa2ZqpPDSwMP0fTfk1gtGSStSk//DxKiGy6zwCQs7Uw==",
+        "requested": "[1.0.117, )",
+        "resolved": "1.0.117",
+        "contentHash": "lGfOhA3QQod9XhdWYqLgNgbgq5uZnVG6DtnhDAdPisbLpTTgZBNbeGnp+GWt8C+3EyaqBYTGJWXcxHlHKwo05A==",
         "dependencies": {
-          "Stub.System.Data.SQLite.Core.NetStandard": "[1.0.118]"
+          "Stub.System.Data.SQLite.Core.NetStandard": "[1.0.117]"
         }
       },
       "Dalamud.Loc": {
@@ -79,8 +79,8 @@
       },
       "Stub.System.Data.SQLite.Core.NetStandard": {
         "type": "Transitive",
-        "resolved": "1.0.118",
-        "contentHash": "4TS8IZvDj0ud6utxfXI6zv9Ditk4U9Kt9KqLyAIQGcU3GXp5oGBHgGZifq+APcqRCayuN/MSE8t9ZZmygtU28A=="
+        "resolved": "1.0.117",
+        "contentHash": "x1zzPC/A4MmiKGDLoxLE6O5KLu7Kz7dyzhPQzlqYFTFcXmXAtM7hNNWpGw5yLEz833AnGbd/kxoitXArgR4YyA=="
       },
       "System.Runtime.CompilerServices.Unsafe": {
         "type": "Transitive",

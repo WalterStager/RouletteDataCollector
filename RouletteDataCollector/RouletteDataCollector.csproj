@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Authors />
     <Company />
-    <Version>0.3.1.0</Version>
+    <Version>0.3.2.0</Version>
     <Description>Collects data on duty roulettes.</Description>
     <Copyright />
     <PackageProjectUrl>https://github.com/WalterStager/RouletteDataCollector/</PackageProjectUrl>
@@ -15,6 +15,6 @@
     <PackageReference Include="AutoMapper" Version="13.0.1" />
     <PackageReference Include="Dalamud.DrunkenToad" Version="1.8.15" />
     <PackageReference Include="Dapper" Version="2.1.35" />
-    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.118" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="1.0.117" />
   </ItemGroup>
 </Project>
